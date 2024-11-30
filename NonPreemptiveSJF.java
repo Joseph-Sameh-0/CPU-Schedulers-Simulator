@@ -12,15 +12,17 @@ class Process {
         this.arrivalTime = arrivalTime;
         this.burstTime = burstTime;
         this.completed = false;
-        this.priority = 1; 
+        this.priority = 1;
     }
 }
 
 public class NonPreemptiveSJF {
 
     public static void simulateSJF(ArrayList<Process> processes) {
-        int currentTime = 0, completed = 0, totalWaitingTime = 0, totalTurnaroundTime = 0;
 
+         int currentTime = 0, completed = 0;
+         int totalWaitingTime = 0, totalTurnaroundTime = 0;
+        //put processes into ready queue
         while (completed < processes.size()) {
             ArrayList<Process> availableProcesses = new ArrayList<>();
             for (Process p : processes) {
@@ -28,28 +30,35 @@ public class NonPreemptiveSJF {
                     availableProcesses.add(p);
                 }
             }
-//--------------------------------------------------------------------------------------------------------------------
+            // --------------------------------------------------------------------------------------------------------------------
+            // Check if no process have arrived
+
             if (availableProcesses.isEmpty()) {
-                currentTime++; 
+                currentTime++;
                 continue;
             }
-//--------------------------------------------------------------------------------------------------------------------
+            // --------------------------------------------------------------------------------------------------------------------
             // Starvation Solution
+
             for (Process p : processes) {
                 if (!p.completed && currentTime - p.arrivalTime > 10) {
-                    p.priority = 0; 
+                    p.priority = 0;
                 }
             }
             availableProcesses.sort(Comparator
-                    .comparingInt((Process p) -> p.priority) 
-                    .thenComparingInt(p -> p.burstTime));   
-//--------------------------------------------------------------------------------------------------------------------
+                    .comparingInt((Process p) -> p.priority)
+                    .thenComparingInt(p -> p.burstTime));
+            // --------------------------------------------------------------------------------------------------------------------
+            // start process in processor
+
             Process process = availableProcesses.get(0);
             currentTime += process.burstTime;
             process.completed = true;
             completed++;
 
-//--------------------------------------------------------------------------------------------------------------------
+            // --------------------------------------------------------------------------------------------------------------------
+            // calculate times
+
             process.turnaroundTime = currentTime - process.arrivalTime;
             process.waitingTime = process.turnaroundTime - process.burstTime;
             totalWaitingTime += process.waitingTime;
@@ -62,7 +71,6 @@ public class NonPreemptiveSJF {
         System.out.println("\nAverage Turnaround Time: " + (double) totalTurnaroundTime / processes.size());
         System.out.println("Average Waiting Time: " + (double) totalWaitingTime / processes.size());
     }
-
 
     public static void main(String[] args) {
         try (Scanner sc = new Scanner(System.in)) {
