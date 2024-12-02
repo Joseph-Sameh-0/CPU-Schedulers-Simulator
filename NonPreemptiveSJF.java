@@ -22,6 +22,7 @@ public class NonPreemptiveSJF {
 
          int currentTime = 0, completed = 0;
          int totalWaitingTime = 0, totalTurnaroundTime = 0;
+         
         //put processes into ready queue
         while (completed < processes.size()) {
             ArrayList<Process> availableProcesses = new ArrayList<>();
@@ -57,7 +58,7 @@ public class NonPreemptiveSJF {
             completed++;
 
             // --------------------------------------------------------------------------------------------------------------------
-            // calculate times
+            // calculate time
 
             process.turnaroundTime = currentTime - process.arrivalTime;
             process.waitingTime = process.turnaroundTime - process.burstTime;
