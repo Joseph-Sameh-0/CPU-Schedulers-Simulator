@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Scanner;
+import java.io.BufferedReader;
+import java.io.FileReader;
 
 class Process {
     String name;
@@ -22,7 +23,7 @@ public class NonPreemptiveSJF {
 
          int currentTime = 0, completed = 0;
          int totalWaitingTime = 0, totalTurnaroundTime = 0;
-         
+
         //put processes into ready queue
         while (completed < processes.size()) {
             ArrayList<Process> availableProcesses = new ArrayList<>();
@@ -74,20 +75,23 @@ public class NonPreemptiveSJF {
     }
 
     public static void main(String[] args) {
-        try (Scanner sc = new Scanner(System.in)) {
-            System.out.print("Enter the number of processes: ");
-            int n = sc.nextInt();
-            ArrayList<Process> processes = new ArrayList<>();
+        ArrayList<Process> processes = new ArrayList<>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader("Process.txt"))) {
+            int n = Integer.parseInt(br.readLine().trim()); 
 
             for (int i = 0; i < n; i++) {
-                System.out.print("Enter process name, arrival time, and burst time: ");
-                String name = sc.next();
-                int arrival = sc.nextInt();
-                int burst = sc.nextInt();
+                String[] processDetails = br.readLine().split(" ");
+                String name = processDetails[0];
+                int arrival = Integer.parseInt(processDetails[1]);
+                int burst = Integer.parseInt(processDetails[2]);
                 processes.add(new Process(name, arrival, burst));
             }
-
-            simulateSJF(processes);
+        } catch (Exception e) {
+            System.err.println("Error reading the file: " + e.getMessage());
+            return;
         }
+
+        simulateSJF(processes);
     }
 }
