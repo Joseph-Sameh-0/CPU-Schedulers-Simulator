@@ -1,72 +1,308 @@
 package org.example.FCAI;
 
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Scanner;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 
-class CustomQueue<T extends Comparable<T>> {
+public class FCAISchedular extends JFrame {
 
-  private final List<T> list;
+  FCAICalc calc;
+  FCAIProcess runningProcess;
+  private final CustomQueue<FCAIProcess> waitingQueue;
+  protected List<FCAIProcess> processes;
+  private int finishedProcesses;
+  private JPanel graphPanel;
+  private JPanel infoPanel;
+  private JPanel statsPanel;
 
-  public CustomQueue() {
-    this.list = Collections.synchronizedList(new ArrayList<>());
+  private static enum Type {
+    Console,
+    GUI,
   }
 
-  // Add an element to the list
-  public void add(T element) {
-    list.add(element);
+  private Type uiType = Type.Console;
+
+  public FCAISchedular() {
+    this.waitingQueue = new CustomQueue<>();
   }
 
-  // Get the "first in" element
-  public T getFirstIn() {
-    synchronized (list) {
-      return list.isEmpty() ? null : list.get(0);
+  void run() {
+    if (uiType == Type.GUI) {
+      //setup the GUI
+      //set the processes information in the GUI
+      setTitle("CPU Scheduling Graph");
+      setSize(800, 600);
+      setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+      setLayout(new BorderLayout());
+
+      // Initialize and configure the graph panel
+      graphPanel = new JPanel() {
+          @Override
+          protected void paintComponent(Graphics g) {
+              super.paintComponent(g);
+              drawGraph(g); // Custom method to draw the graph
+          }
+      };
+      graphPanel.setBackground(Color.DARK_GRAY);
+      graphPanel.setBorder(new LineBorder(Color.LIGHT_GRAY, 2));
+      add(graphPanel, BorderLayout.CENTER);
+
+      // Initialize and configure the info panel
+      infoPanel = new JPanel();
+      infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+      infoPanel.setBackground(Color.DARK_GRAY);
+      infoPanel.setPreferredSize(new Dimension(200, getHeight()));
+      infoPanel.setBorder(new LineBorder(Color.LIGHT_GRAY, 2));
+      infoPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+      add(infoPanel, BorderLayout.EAST);
+
+      // Initialize and configure the stats panel
+      statsPanel = new JPanel();
+      statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.Y_AXIS));
+      statsPanel.setBackground(Color.DARK_GRAY);
+      statsPanel.setBorder(new LineBorder(Color.LIGHT_GRAY, 2));
+      statsPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+      add(statsPanel, BorderLayout.SOUTH);
+
+      setupInfoPanel(); // Method to populate the info panel
+      setupStatsPanel(); // Method to populate the stats panel
+
+      setVisible(true);
+    } else {
+      new Thread(() -> {
+        int Time = 0;
+        while (finishedProcesses < processes.size()) {
+          try {
+            Thread.sleep(500);
+            System.out.println(
+              "------------------------------------------------------------------------- time " +
+              Time +
+              " -> " +
+              (Time + 1)
+            );
+            Time++;
+            Thread.sleep(500);
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            break;
+          }
+        }
+      })
+        .start();
+
+      for (FCAIProcess p : processes) {
+        new Thread(p).start();
+      }
     }
   }
 
-  // Get the smallest element
-  public T getSmallest() {
-    synchronized (list) {
-      if (list.isEmpty()) {
-        return null;
+  public void main(Scanner scanner) {
+    // take the choice of selecting the console or the gui
+    boolean exit = false;
+    while (!exit) {
+      System.out.println("1. console app");
+      System.out.println("2. gui app");
+      System.out.println("3. Exit");
+      int choice = scanner.nextInt();
+      // create a new scheduler based on the user's choice
+      switch (choice) {
+        case 1:
+          uiType = Type.Console;
+          run();
+          break;
+        case 2:
+          uiType = Type.GUI;
+          run();
+          break;
+        case 3:
+          exit = true;
+          break;
+        default: // if the user enters an invalid choice
+          System.out.println("Invalid choice."); // exit the program
       }
-      T smallest = list.get(0);
-      for (T element : list) {
-        if (element.compareTo(smallest) < 0) {
-          smallest = element;
+    }
+  }
+
+      // Method to setup the info panel
+      private void setupInfoPanel() {
+        JLabel title = new JLabel("Processes Information");
+        title.setForeground(Color.RED);
+        infoPanel.add(title);
+
+        // Add each process's information
+        for (FCAIProcess p : processes) {
+            JLabel processInfo = new JLabel("Process: " + p.name + ", Color: " + p.getColor());
+            processInfo.setForeground(Color.WHITE);
+            infoPanel.add(processInfo);
+        }
+    }
+
+    // Method to setup the stats panel
+    private void setupStatsPanel() {
+        JLabel statsTitle = new JLabel("Statistics");
+        statsTitle.setForeground(Color.RED);
+        statsPanel.add(statsTitle);
+
+        // Display average waiting time
+        // JLabel awtLabel = new JLabel("AWT: " + calculateAverageWaitingTime());
+        JLabel awtLabel = new JLabel("AWT: " + 55);
+        awtLabel.setForeground(Color.WHITE);
+        statsPanel.add(awtLabel);
+
+        // Display average turnaround time
+        // JLabel aiatLabel = new JLabel("AIAT: " + calculateAverageTurnaroundTime());
+        JLabel aiatLabel = new JLabel("AIAT: " + 66);
+        aiatLabel.setForeground(Color.WHITE);
+        statsPanel.add(aiatLabel);
+    }
+
+        // Method to draw the scheduling graph
+        private void drawGraph(Graphics g) {
+          int y = 20; // Initial y-coordinate
+          for (FCAIProcess p : processes) {
+              g.setColor(p.getColor()); // Set color based on process name
+              g.fillRect(50, y, p.burstTime * 10, 20); // Draw rectangle for process
+              g.setColor(Color.WHITE);
+              g.drawString(p.name, 55, y + 15); // Draw process name
+              y += 30; // Increment y-coordinate for next process
+          }
+      }
+
+  public void setProcesses(String filename) {
+    processes = new ArrayList<>();
+    try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+      String line;
+      int lastArrivalTime = 0;
+      int maxBurstTime = 0;
+      while ((line = br.readLine()) != null) {
+        String[] parts = line.split(" ");
+        String processName = parts[0];
+        int burstTime = Integer.parseInt(parts[1]);
+        int arrivalTime = Integer.parseInt(parts[2]);
+        int priority = Integer.parseInt(parts[3]);
+        int quantum = Integer.parseInt(parts[4]);
+
+        processes.add(
+          new FCAIProcess(
+            processName,
+            burstTime,
+            arrivalTime,
+            priority,
+            quantum,
+            Color.red, ///
+            this
+          )
+        );
+
+        if (burstTime > maxBurstTime) {
+          maxBurstTime = burstTime;
+        }
+        if (arrivalTime > lastArrivalTime) {
+          lastArrivalTime = arrivalTime;
         }
       }
-      return smallest;
-    }
-  }
-
-  // Remove the "first in" element
-  public T removeFirstIn() {
-    synchronized (list) {
-      return list.isEmpty() ? null : list.remove(0);
-    }
-  }
-
-  // Remove the smallest element
-  public T removeSmallest() {
-    synchronized (list) {
-      if (list.isEmpty()) {
-        return null;
+      calc = new FCAICalc(lastArrivalTime, maxBurstTime);
+      for (FCAIProcess p : processes) {
+        p.setCalc(calc);
       }
-      T smallest = getSmallest();
-      list.remove(smallest);
-      return smallest;
+    } catch (IOException e) {
+      System.out.println("Error reading the file: " + e.getMessage());
     }
   }
 
-  // Check if the queue is empty
-  public boolean isEmpty() {
-    synchronized (list) {
-      return list.isEmpty();
+  public void process(FCAIProcess process) {
+    // System.out.println(
+    //   "FCAIScheduler process the " + process.getName() + " process"
+    // );
+
+    if (runningProcess == null) {
+      // System.out.println("No process is running");
+
+      runningProcess = process;
+      new Thread(runningProcess).start();
+      return;
     }
+
+    waitingQueue.add(process);
+  }
+
+  public boolean signal() {
+    if (runningProcess != null) {
+      if (!waitingQueue.isEmpty()) {
+        // if the current process is finished the quantum
+        // then remove it from the running process
+        // and execute the next process in the waiting queue
+        if (runningProcess.getRemainingQuantum() == 0) {
+          System.out.println(
+            "FCAIprocess " + runningProcess.getName() + " finished the quantum"
+          );
+          // runningProcess.interrupt();
+          waitingQueue.add(runningProcess);
+          runningProcess = waitingQueue.removeFirstIn();
+          new Thread(runningProcess).start();
+          return true;
+        }
+
+        // if the current process is finished
+        // then remove it from the running process
+        // and execute the next process in the waiting queue
+        if (runningProcess.getBurstTime() == 0) {
+          System.out.println(
+            "FCAIprocess " + runningProcess.getName() + " finished"
+          );
+          finishedProcesses++;
+          // runningProcess.interrupt();
+          runningProcess = waitingQueue.removeFirstIn();
+          new Thread(runningProcess).start();
+          return true;
+        }
+
+        // if there is a process has a smaller factor than the running process
+        // then interrupt the current process
+        // and execute the process with smaller factor
+        int smallestFactor = waitingQueue.getSmallest().getFactor();
+        int currentFactor = runningProcess.getFactor();
+        if (runningProcess.isPreemptive() && smallestFactor <= currentFactor) {
+          System.out.println(
+            "FCAI process " + runningProcess.getName() + " interrupted"
+          );
+          waitingQueue.add(runningProcess);
+          runningProcess = waitingQueue.removeSmallest();
+          new Thread(runningProcess).start();
+          return true;
+        } else {
+          return false;
+        }
+      } else if (
+        runningProcess.getRemainingQuantum() == 0 &&
+        runningProcess.getBurstTime() != 0
+      ) {
+        return false;
+      } else if (runningProcess.getBurstTime() == 0) {
+        System.out.println(
+          "FCAIprocess " + runningProcess.getName() + " finished"
+        );
+        finishedProcesses++;
+        runningProcess = null;
+        return true;
+      } else {
+        return false;
+      }
+    }
+    if (!waitingQueue.isEmpty()) {
+      runningProcess = waitingQueue.removeFirstIn();
+      new Thread(runningProcess).start();
+      return true;
+    }
+    return false;
   }
 }
 
@@ -110,6 +346,12 @@ class FCAIProcess implements Comparable<FCAIProcess>, Runnable {
   protected Boolean running = false;
   private int remainingQuantum;
   private FCAICalc calc;
+  private final Color color;
+
+
+  public Color getColor() {
+    return color;
+  }
 
   private static enum Status {
     NotArrived,
@@ -124,6 +366,7 @@ class FCAIProcess implements Comparable<FCAIProcess>, Runnable {
     int arrivalTime,
     int priority,
     int quantum,
+    Color color,
     FCAISchedular schedular
   ) {
     this.name = name;
@@ -131,6 +374,7 @@ class FCAIProcess implements Comparable<FCAIProcess>, Runnable {
     this.arrivalTime = arrivalTime;
     this.priority = priority;
     this.quantum = quantum;
+    this.color = color;
     this.schedular = schedular;
   }
 
@@ -300,202 +544,65 @@ class FCAIProcess implements Comparable<FCAIProcess>, Runnable {
   }
 }
 
-public class FCAISchedular implements Runnable {
+class CustomQueue<T extends Comparable<T>> {
 
-  FCAICalc calc;
-  FCAIProcess runningProcess;
-  private final CustomQueue<FCAIProcess> waitingQueue;
-  protected List<FCAIProcess> processes;
-  private int finishedProcesses;
+  private final List<T> list;
 
-  public FCAISchedular() {
-    this.waitingQueue = new CustomQueue<>();
+  public CustomQueue() {
+    this.list = Collections.synchronizedList(new ArrayList<>());
   }
 
-  @Override
-  public void run() {
-    new Thread(() -> {
-      int g = 0;
-      while (finishedProcesses < processes.size()) {
-        try {
-          Thread.sleep(500);
-          System.out.println(
-            "------------------------------------------------------------------------- time " +
-            g +
-            " -> " +
-            (g + 1)
-          );
-          g++;
-          Thread.sleep(500);
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-          break;
-        }
-      }
-    })
-      .start();
+  // Add an element to the list
+  public void add(T element) {
+    list.add(element);
+  }
 
-    for (FCAIProcess p : processes) {
-      new Thread(p).start();
+  // Get the "first in" element
+  public T getFirstIn() {
+    synchronized (list) {
+      return list.isEmpty() ? null : list.get(0);
     }
   }
 
-  public void setProcesses(String filename) {
-    processes = new ArrayList<>();
-    try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
-      String line;
-      int lastArrivalTime = 0;
-      int maxBurstTime = 0;
-      while ((line = br.readLine()) != null) {
-        String[] parts = line.split(" ");
-        String processName = parts[0];
-        int burstTime = Integer.parseInt(parts[1]);
-        int arrivalTime = Integer.parseInt(parts[2]);
-        int priority = Integer.parseInt(parts[3]);
-        int quantum = Integer.parseInt(parts[4]);
-
-        processes.add(
-          new FCAIProcess(
-            processName,
-            burstTime,
-            arrivalTime,
-            priority,
-            quantum,
-            this
-          )
-        );
-
-        if (burstTime > maxBurstTime) {
-          maxBurstTime = burstTime;
-        }
-        if (arrivalTime > lastArrivalTime) {
-          lastArrivalTime = arrivalTime;
+  // Get the smallest element
+  public T getSmallest() {
+    synchronized (list) {
+      if (list.isEmpty()) {
+        return null;
+      }
+      T smallest = list.get(0);
+      for (T element : list) {
+        if (element.compareTo(smallest) < 0) {
+          smallest = element;
         }
       }
-      calc = new FCAICalc(lastArrivalTime, maxBurstTime);
-      for (FCAIProcess p : processes) {
-        p.setCalc(calc);
-      }
-    } catch (IOException e) {
-      System.out.println("Error reading the file: " + e.getMessage());
+      return smallest;
     }
   }
 
-  public void process(FCAIProcess process) {
-    // System.out.println(
-    //   "FCAIScheduler process the " + process.getName() + " process"
-    // );
-
-    if (runningProcess == null) {
-      // System.out.println("No process is running");
-
-      runningProcess = process;
-      new Thread(runningProcess).start();
-      return;
+  // Remove the "first in" element
+  public T removeFirstIn() {
+    synchronized (list) {
+      return list.isEmpty() ? null : list.remove(0);
     }
-
-    waitingQueue.add(process);
   }
 
-  public boolean signal() {
-    // System.out.println("signal from FCAI scheduler");
-
-    if (runningProcess != null) {
-      // System.out.println("runningProcess != null");
-      if (!waitingQueue.isEmpty()) {
-        // System.out.println("waitingQueue != empty");
-
-        // if the current process is finished the quantum
-        // then remove it from the running process
-        // and execute the next process in the waiting queue
-
-        if (runningProcess.getRemainingQuantum() == 0) {
-          System.out.println(
-            "FCAIprocess " + runningProcess.getName() + " finished the quantum"
-          );
-          // runningProcess.interrupt();
-          waitingQueue.add(runningProcess);
-          runningProcess = waitingQueue.removeFirstIn();
-          new Thread(runningProcess).start();
-
-          return true;
-        }
-
-        // if the current process is finished
-        // then remove it from the running process
-        // and execute the next process in the waiting queue
-        if (runningProcess.getBurstTime() == 0) {
-          System.out.println(
-            "FCAIprocess " + runningProcess.getName() + " finished"
-          );
-          finishedProcesses++;
-          // runningProcess.interrupt();
-          runningProcess = waitingQueue.removeFirstIn();
-          new Thread(runningProcess).start();
-          return true;
-        }
-
-        // if there is a process has a smaller factor than the running process
-        // then interrupt the current process
-        // and execute the process with smaller factor
-
-        int smallestFactor = waitingQueue.getSmallest().getFactor();
-        int currentFactor = runningProcess.getFactor();
-
-        if (runningProcess.isPreemptive() && smallestFactor <= currentFactor) {
-          // System.out.println(
-          //   "process " +
-          //   waitingQueue.getSmallest().getName() +
-          //   " has smaller factor " +
-          //   smallestFactor +
-          //   " than " +
-          //   runningProcess.getName() +
-          //   " " +
-          //   currentFactor
-          // );
-          System.out.println(
-            "FCAI process " + runningProcess.getName() + " interrupted"
-          );
-          waitingQueue.add(runningProcess);
-          // runningProcess.interrupt();
-          runningProcess = waitingQueue.removeSmallest();
-          new Thread(runningProcess).start();
-          return true;
-        } else {
-          // System.out.println(
-          //   "no process has smaller factor than " + runningProcess.getName()
-          // );
-          return false;
-        }
-      } else if (
-        runningProcess.getRemainingQuantum() == 0 &&
-        runningProcess.getBurstTime() != 0
-      ) {
-        // System.out.println(" the only process is continued ");
-        // runningProcess.interrupt();
-        // runningProcess.execute();
-        return false;
-      } else if (runningProcess.getBurstTime() == 0) {
-        // System.out.println(" there is no process to execute ");
-        System.out.println(
-          "FCAIprocess " + runningProcess.getName() + " finished"
-        );
-        finishedProcesses++;
-        runningProcess = null;
-        return true;
-      } else {
-        // System.out.println("no change");
-        return false;
+  // Remove the smallest element
+  public T removeSmallest() {
+    synchronized (list) {
+      if (list.isEmpty()) {
+        return null;
       }
+      T smallest = getSmallest();
+      list.remove(smallest);
+      return smallest;
     }
-    if (!waitingQueue.isEmpty()) {
-      // System.out.println(
-      //   "waiting queue is not empty and the running process is null"
-      // );
-      runningProcess = waitingQueue.removeFirstIn();
-      new Thread(runningProcess).start();
-      return true;
+  }
+
+  // Check if the queue is empty
+  public boolean isEmpty() {
+    synchronized (list) {
+      return list.isEmpty();
     }
-    return false;
   }
 }
