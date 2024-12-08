@@ -13,37 +13,12 @@ public class FCAISchedular implements Runnable {
   private final CustomQueue<FCAIProcess> waitingQueue;
   protected List<FCAIProcess> processes;
 
-  public List<FCAIProcess> getProcesses() {
-    return processes;
-  }
-
   public FCAISchedular() {
     this.waitingQueue = new CustomQueue<>();
   }
 
-  public void addToQueue(FCAIProcess process) {
-    waitingQueue.add(process);
-  }
-
-  // @Override
-  // public void setProcesses(List<Process> processes) {
-  //   super.setProcesses(processes);
-  //   int lastArrivalTime = 0;
-  //   int maxBurstTime = 0;
-  //   for (Process p : processes) {
-  //     if (p.getBurstTime() > maxBurstTime) {
-  //       maxBurstTime = p.getBurstTime();
-  //     }
-  //     if (p.getArrivalTime() > lastArrivalTime) {
-  //       lastArrivalTime = p.getArrivalTime();
-  //     }
-  //   }
-  //   calc = new FCAICalc(lastArrivalTime, maxBurstTime);
-  // }
-
   @Override
   public void run() {
-    // System.out.println("FCAIScheduler running");
     for (FCAIProcess p : processes) {
       new Thread(p).start();
     }
@@ -99,7 +74,7 @@ public class FCAISchedular implements Runnable {
       // System.out.println("No process is running");
 
       runningProcess = process;
-      runningProcess.execute();
+      new Thread(runningProcess).start();
       return;
     }
 
@@ -125,10 +100,7 @@ public class FCAISchedular implements Runnable {
           // runningProcess.interrupt();
           waitingQueue.add(runningProcess);
           runningProcess = waitingQueue.removeFirstIn();
-          new Thread(() -> {
-            runningProcess.execute();
-          })
-            .start();
+          new Thread(runningProcess).start();
 
           return true;
         }
@@ -142,10 +114,7 @@ public class FCAISchedular implements Runnable {
           // );
           // runningProcess.interrupt();
           runningProcess = waitingQueue.removeFirstIn();
-          new Thread(() -> {
-            runningProcess.execute();
-          })
-            .start();
+          new Thread(runningProcess).start();
           return true;
         }
 
@@ -156,10 +125,7 @@ public class FCAISchedular implements Runnable {
         int smallestFactor = waitingQueue.getSmallest().getFactor();
         int currentFactor = runningProcess.getFactor();
 
-        if (
-          FCAICalc.isPreemptive(runningProcess) &&
-          smallestFactor <= currentFactor
-        ) {
+        if (runningProcess.isPreemptive() && smallestFactor <= currentFactor) {
           // System.out.println(
           //   "process " +
           //   waitingQueue.getSmallest().getName() +
@@ -173,10 +139,7 @@ public class FCAISchedular implements Runnable {
           waitingQueue.add(runningProcess);
           // runningProcess.interrupt();
           runningProcess = waitingQueue.removeSmallest();
-          new Thread(() -> {
-            runningProcess.execute();
-          })
-            .start();
+          new Thread(runningProcess).start();
           return true;
         } else {
           // System.out.println(
@@ -206,11 +169,7 @@ public class FCAISchedular implements Runnable {
       //   "waiting queue is not empty and the running process is null"
       // );
       runningProcess = waitingQueue.removeFirstIn();
-      new Thread(() -> {
-        runningProcess.execute();
-      })
-        .start();
-
+      new Thread(runningProcess).start();
       return true;
     }
     return false;

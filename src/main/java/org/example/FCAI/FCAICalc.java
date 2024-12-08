@@ -28,16 +28,4 @@ public class FCAICalc {
       p.setQuantum(p.getQuantum() + p.getRemainingQuantum());
     }
   }
-
-  public static Boolean isPreemptive(FCAIProcess p) {
-    double preemptiveFactor =
-      (p.getQuantum() - p.getRemainingQuantum()) / (double) p.getQuantum();
-    // System.out.println("preemptiveFactor = " + preemptiveFactor);
-    if (preemptiveFactor >= 0.4) {
-      // System.out.println(p.getName() + " is Preemptive");
-      return true;
-    }
-    // System.out.println(p.getName() + " is not Preemptive");
-    return false;
-  }
 }
