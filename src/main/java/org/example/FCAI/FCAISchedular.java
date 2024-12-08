@@ -4,19 +4,25 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import org.example.data.Process;
-import org.example.data.Schedular;
+import java.util.List;
 
-public class FCAISchedular extends Schedular {
+public class FCAISchedular implements Runnable {
 
   FCAICalc calc;
-  Process runningProcess;
-  private final BlockingQueue<Process> waitingQueue;
+  FCAIProcess runningProcess;
+  private final CustomQueue<FCAIProcess> waitingQueue;
+  protected List<FCAIProcess> processes;
+
+  public List<FCAIProcess> getProcesses() {
+    return processes;
+  }
 
   public FCAISchedular() {
-    this.waitingQueue = new LinkedBlockingQueue<>();
+    this.waitingQueue = new CustomQueue<>();
+  }
+
+  public void addToQueue(FCAIProcess process) {
+    waitingQueue.add(process);
   }
 
   // @Override
@@ -37,13 +43,12 @@ public class FCAISchedular extends Schedular {
 
   @Override
   public void run() {
-    System.out.println("FCAIScheduler running");
-    for (Process p : processes) {
+    // System.out.println("FCAIScheduler running");
+    for (FCAIProcess p : processes) {
       new Thread(p).start();
     }
   }
 
-  @Override
   public void setProcesses(String filename) {
     processes = new ArrayList<>();
     try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
@@ -77,70 +82,137 @@ public class FCAISchedular extends Schedular {
         }
       }
       calc = new FCAICalc(lastArrivalTime, maxBurstTime);
+      for (FCAIProcess p : processes) {
+        p.setCalc(calc);
+      }
     } catch (IOException e) {
       System.out.println("Error reading the file: " + e.getMessage());
     }
   }
 
-  @Override
-  public void process(Process process) {
-    System.out.println(
-      "FCAIScheduler process the " + process.getName() + " process"
-    );
+  public void process(FCAIProcess process) {
+    // System.out.println(
+    //   "FCAIScheduler process the " + process.getName() + " process"
+    // );
 
     if (runningProcess == null) {
+      // System.out.println("No process is running");
+
       runningProcess = process;
       runningProcess.execute();
-      System.out.println(
-        "FCAIScheduler executes the " + runningProcess.getName() + " process"
-      );
+      return;
     }
 
-    if (process == runningProcess) {
-      runningProcess.interrupt();
-      waitingQueue.add(runningProcess);
-      System.out.println(runningProcess.getName() + " added to waiting queue");
-      runningProcess = waitingQueue.poll();
-      System.out.println("runningProcess = " + runningProcess.getName());
-      runningProcess.execute();
-    } else if (
-      FCAICalc.isPreemptive((FCAIProcess) runningProcess) &&
-      (calc.calcFactor(process) < calc.calcFactor(runningProcess))
-    ) {
-      // System.out.println(runningProcess.getName() + " is Preemptive");
-      runningProcess.interrupt();
-      waitingQueue.add(runningProcess);
-      System.out.println(runningProcess.getName() + " added to waitingQueue");
-      runningProcess = process;
-      System.out.println("runningProcess = " + process.getName());
-      runningProcess.execute();
-    } else {
-      // System.out.println(runningProcess.getName() + " is not Preemptive");
-      waitingQueue.add(process);
-      System.out.println(process.getName() + " added to waitingQueue");
-    }
+    waitingQueue.add(process);
   }
 
-  @Override
-  public void signal() {
-    System.out.println("signal from FCAI scheduler");
-    if (!waitingQueue.isEmpty()) {
-      if (runningProcess.getBurstTime() == 0 ||
-        (
-          FCAICalc.isPreemptive((FCAIProcess) runningProcess) &&
-          (
-            calc.calcFactor(waitingQueue.peek()) <
-            calc.calcFactor(runningProcess)
-          )
-        )
+  public boolean signal() {
+    // System.out.println("signal from FCAI scheduler");
+
+    if (runningProcess != null) {
+      // System.out.println("runningProcess != null");
+      if (!waitingQueue.isEmpty()) {
+        // System.out.println("waitingQueue != empty");
+
+        // if the current process is finished the quantum
+        // then remove it from the running process
+        // and execute the next process in the waiting queue
+
+        if (runningProcess.getRemainingQuantum() == 0) {
+          // System.out.println(
+          //   "process " + runningProcess.getName() + " finished the quantum"
+          // );
+          // runningProcess.interrupt();
+          waitingQueue.add(runningProcess);
+          runningProcess = waitingQueue.removeFirstIn();
+          new Thread(() -> {
+            runningProcess.execute();
+          })
+            .start();
+
+          return true;
+        }
+
+        // if the current process is finished
+        // then remove it from the running process
+        // and execute the next process in the waiting queue
+        if (runningProcess.getBurstTime() == 0) {
+          // System.out.println(
+          //   "process " + runningProcess.getName() + " finished"
+          // );
+          // runningProcess.interrupt();
+          runningProcess = waitingQueue.removeFirstIn();
+          new Thread(() -> {
+            runningProcess.execute();
+          })
+            .start();
+          return true;
+        }
+
+        // if there is a process has a smaller factor than the running process
+        // then interrupt the current process
+        // and execute the process with smaller factor
+
+        int smallestFactor = waitingQueue.getSmallest().getFactor();
+        int currentFactor = runningProcess.getFactor();
+
+        if (
+          FCAICalc.isPreemptive(runningProcess) &&
+          smallestFactor <= currentFactor
+        ) {
+          // System.out.println(
+          //   "process " +
+          //   waitingQueue.getSmallest().getName() +
+          //   " has smaller factor " +
+          //   smallestFactor +
+          //   " than " +
+          //   runningProcess.getName() +
+          //   " " +
+          //   currentFactor
+          // );
+          waitingQueue.add(runningProcess);
+          // runningProcess.interrupt();
+          runningProcess = waitingQueue.removeSmallest();
+          new Thread(() -> {
+            runningProcess.execute();
+          })
+            .start();
+          return true;
+        } else {
+          // System.out.println(
+          //   "no process has smaller factor than " + runningProcess.getName()
+          // );
+          return false;
+        }
+      } else if (
+        runningProcess.getRemainingQuantum() == 0 &&
+        runningProcess.getBurstTime() != 0
       ) {
-        runningProcess.interrupt();
-        runningProcess = waitingQueue.poll();
-        System.out.println(
-          "FCAIScheduler executes the " + runningProcess.getName() + " process"
-        );
-        runningProcess.execute();
+        // System.out.println(" the only process is continued ");
+        // runningProcess.interrupt();
+        // runningProcess.execute();
+        return false;
+      } else if (runningProcess.getBurstTime() == 0) {
+        // System.out.println(" there is no process to execute ");
+        runningProcess = null;
+        return true;
+      } else {
+        // System.out.println("no change");
+        return false;
       }
     }
+    if (!waitingQueue.isEmpty()) {
+      // System.out.println(
+      //   "waiting queue is not empty and the running process is null"
+      // );
+      runningProcess = waitingQueue.removeFirstIn();
+      new Thread(() -> {
+        runningProcess.execute();
+      })
+        .start();
+
+      return true;
+    }
+    return false;
   }
 }

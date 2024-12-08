@@ -1,11 +1,11 @@
 package org.example;
 
 import org.example.FCAI.*;
-import org.example.data.Schedular;
+
 
 public class CPUScheduler {
 
-  static Schedular schedular;
+  static FCAISchedular schedular;
 
   public static void main(String[] args) {
     new Thread(() -> {
@@ -14,7 +14,7 @@ public class CPUScheduler {
         try {
           Thread.sleep(500);
           System.out.println(
-            "------------------------------------------------------------------------------------------------- time = " + (40 - g)
+            "------------------------------------------------------------------------- time " + (39 - g) + " -> " +(40 - g)
           );
           Thread.sleep(500);
         } catch (InterruptedException e) {
