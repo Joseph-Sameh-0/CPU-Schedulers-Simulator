@@ -2,10 +2,9 @@ package org.example;
 
 import org.example.FCAI.*;
 
-
 public class CPUScheduler {
 
-  static FCAISchedular schedular;
+  static SRTFSchedular schedular;
 
   public static void main(String[] args) {
     new Thread(() -> {
@@ -25,7 +24,7 @@ public class CPUScheduler {
     })
       .start();
 
-    schedular = new FCAISchedular();
+    schedular = new SRTFSchedular();
 
     //get processes
     schedular.setProcesses("src/test_cases/AG.txt");
