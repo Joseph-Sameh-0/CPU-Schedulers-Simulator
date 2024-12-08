@@ -2,6 +2,7 @@ package org.example;
 
 import java.util.Scanner;
 import org.example.FCAI.*;
+import org.example.SJF.NonPreemptiveSJF;
 
 public class CPUScheduler {
 
@@ -21,7 +22,7 @@ public class CPUScheduler {
       // create a new scheduler based on the user's choice
       switch (choice) {
         case 1:
-          // schedular = new SJFScheduler(); // create a new SJF scheduler
+          NonPreemptiveSJF.main();
           break;
         case 2:
           // schedular = new SRTFScheduler(); // create a new SRTF scheduler
