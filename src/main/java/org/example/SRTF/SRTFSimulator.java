@@ -39,7 +39,7 @@ public class SRTFSimulator {
     }
 
     public static void main() {
-        SRTFSimulator Mainscheduler = new SRTFSimulator(4);
+        SRTFSimulator Mainscheduler = new SRTFSimulator(8);
 
         // Read processes from file
         Mainscheduler.setProcesses("src/test_cases/SRTF.txt");
