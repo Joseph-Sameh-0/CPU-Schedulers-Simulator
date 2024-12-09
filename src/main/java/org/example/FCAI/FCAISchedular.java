@@ -22,6 +22,7 @@ public class FCAISchedular extends JFrame {
   private JPanel graphPanel;
   private JPanel infoPanel;
   private JPanel statsPanel;
+  private final long unitOfTime;
 
   private static enum Type {
     Console,
@@ -30,8 +31,9 @@ public class FCAISchedular extends JFrame {
 
   private Type uiType = Type.Console;
 
-  public FCAISchedular() {
+  public FCAISchedular(long unitOfTime) {
     this.waitingQueue = new CustomQueue<>();
+    this.unitOfTime = unitOfTime;
   }
 
   void run() {
@@ -44,13 +46,14 @@ public class FCAISchedular extends JFrame {
       setLayout(new BorderLayout());
 
       // Initialize and configure the graph panel
-      graphPanel = new JPanel() {
+      graphPanel =
+        new JPanel() {
           @Override
           protected void paintComponent(Graphics g) {
-              super.paintComponent(g);
-              drawGraph(g); // Custom method to draw the graph
+            super.paintComponent(g);
+            drawGraph(g); // Custom method to draw the graph
           }
-      };
+        };
       graphPanel.setBackground(Color.DARK_GRAY);
       graphPanel.setBorder(new LineBorder(Color.LIGHT_GRAY, 2));
       add(graphPanel, BorderLayout.CENTER);
@@ -81,7 +84,7 @@ public class FCAISchedular extends JFrame {
         int Time = 0;
         while (finishedProcesses < processes.size()) {
           try {
-            Thread.sleep(500);
+            Thread.sleep(unitOfTime / 2);
             System.out.println(
               "------------------------------------------------------------------------- time " +
               Time +
@@ -89,7 +92,7 @@ public class FCAISchedular extends JFrame {
               (Time + 1)
             );
             Time++;
-            Thread.sleep(500);
+            Thread.sleep(unitOfTime / 2);
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             break;
@@ -104,77 +107,64 @@ public class FCAISchedular extends JFrame {
     }
   }
 
-  public void main(Scanner scanner) {
-    // take the choice of selecting the console or the gui
-    boolean exit = false;
-    while (!exit) {
-      System.out.println("1. console app");
-      System.out.println("2. gui app");
-      System.out.println("3. Exit");
-      int choice = scanner.nextInt();
-      // create a new scheduler based on the user's choice
-      switch (choice) {
-        case 1:
-          uiType = Type.Console;
-          run();
-          break;
-        case 2:
-          uiType = Type.GUI;
-          run();
-          break;
-        case 3:
-          exit = true;
-          break;
-        default: // if the user enters an invalid choice
-          System.out.println("Invalid choice."); // exit the program
-      }
+  public void main(String type) {
+    if (type == "console") {
+      uiType = Type.Console;
+      run();
+    } else if (type == "gui") {
+      uiType = Type.GUI;
+      run();
+    } else {
+      System.out.println("Invalid type. Please choose 'console' or 'gui'.");
     }
   }
 
-      // Method to setup the info panel
-      private void setupInfoPanel() {
-        JLabel title = new JLabel("Processes Information");
-        title.setForeground(Color.RED);
-        infoPanel.add(title);
+  // Method to setup the info panel
+  private void setupInfoPanel() {
+    JLabel title = new JLabel("Processes Information");
+    title.setForeground(Color.RED);
+    infoPanel.add(title);
 
-        // Add each process's information
-        for (FCAIProcess p : processes) {
-            JLabel processInfo = new JLabel("Process: " + p.name + ", Color: " + p.getColor());
-            processInfo.setForeground(Color.WHITE);
-            infoPanel.add(processInfo);
-        }
+    // Add each process's information
+    for (FCAIProcess p : processes) {
+      JLabel processInfo = new JLabel(
+        "Process: " + p.name + ", Color: " + p.getColor()
+      );
+      processInfo.setForeground(Color.WHITE);
+      infoPanel.add(processInfo);
     }
+  }
 
-    // Method to setup the stats panel
-    private void setupStatsPanel() {
-        JLabel statsTitle = new JLabel("Statistics");
-        statsTitle.setForeground(Color.RED);
-        statsPanel.add(statsTitle);
+  // Method to setup the stats panel
+  private void setupStatsPanel() {
+    JLabel statsTitle = new JLabel("Statistics");
+    statsTitle.setForeground(Color.RED);
+    statsPanel.add(statsTitle);
 
-        // Display average waiting time
-        // JLabel awtLabel = new JLabel("AWT: " + calculateAverageWaitingTime());
-        JLabel awtLabel = new JLabel("AWT: " + 55);
-        awtLabel.setForeground(Color.WHITE);
-        statsPanel.add(awtLabel);
+    // Display average waiting time
+    // JLabel awtLabel = new JLabel("AWT: " + calculateAverageWaitingTime());
+    JLabel awtLabel = new JLabel("AWT: " + 55);
+    awtLabel.setForeground(Color.WHITE);
+    statsPanel.add(awtLabel);
 
-        // Display average turnaround time
-        // JLabel aiatLabel = new JLabel("AIAT: " + calculateAverageTurnaroundTime());
-        JLabel aiatLabel = new JLabel("AIAT: " + 66);
-        aiatLabel.setForeground(Color.WHITE);
-        statsPanel.add(aiatLabel);
+    // Display average turnaround time
+    // JLabel aiatLabel = new JLabel("AIAT: " + calculateAverageTurnaroundTime());
+    JLabel aiatLabel = new JLabel("AIAT: " + 66);
+    aiatLabel.setForeground(Color.WHITE);
+    statsPanel.add(aiatLabel);
+  }
+
+  // Method to draw the scheduling graph
+  private void drawGraph(Graphics g) {
+    int y = 20; // Initial y-coordinate
+    for (FCAIProcess p : processes) {
+      g.setColor(p.getColor()); // Set color based on process name
+      g.fillRect(50, y, p.burstTime * 10, 20); // Draw rectangle for process
+      g.setColor(Color.WHITE);
+      g.drawString(p.name, 55, y + 15); // Draw process name
+      y += 30; // Increment y-coordinate for next process
     }
-
-        // Method to draw the scheduling graph
-        private void drawGraph(Graphics g) {
-          int y = 20; // Initial y-coordinate
-          for (FCAIProcess p : processes) {
-              g.setColor(p.getColor()); // Set color based on process name
-              g.fillRect(50, y, p.burstTime * 10, 20); // Draw rectangle for process
-              g.setColor(Color.WHITE);
-              g.drawString(p.name, 55, y + 15); // Draw process name
-              y += 30; // Increment y-coordinate for next process
-          }
-      }
+  }
 
   public void setProcesses(String filename) {
     processes = new ArrayList<>();
@@ -198,6 +188,7 @@ public class FCAISchedular extends JFrame {
             priority,
             quantum,
             Color.red, ///
+            unitOfTime,
             this
           )
         );
@@ -347,7 +338,7 @@ class FCAIProcess implements Comparable<FCAIProcess>, Runnable {
   private int remainingQuantum;
   private FCAICalc calc;
   private final Color color;
-
+  private final long unitOfTime;
 
   public Color getColor() {
     return color;
@@ -367,6 +358,7 @@ class FCAIProcess implements Comparable<FCAIProcess>, Runnable {
     int priority,
     int quantum,
     Color color,
+    long unitOfTime,
     FCAISchedular schedular
   ) {
     this.name = name;
@@ -375,6 +367,7 @@ class FCAIProcess implements Comparable<FCAIProcess>, Runnable {
     this.priority = priority;
     this.quantum = quantum;
     this.color = color;
+    this.unitOfTime = unitOfTime;
     this.schedular = schedular;
   }
 
@@ -419,7 +412,7 @@ class FCAIProcess implements Comparable<FCAIProcess>, Runnable {
     if (status == Status.NotArrived) {
       status = Status.Arrived;
       try {
-        Thread.sleep(arrivalTime * 1000L);
+        Thread.sleep(arrivalTime * unitOfTime);
         // System.out.println("Process " + name + " arrived");
         new Thread(() -> {
           schedular.process(this);
@@ -443,7 +436,7 @@ class FCAIProcess implements Comparable<FCAIProcess>, Runnable {
         remainingQuantum = quantum;
         running = true;
         while (running && burstTime > 0 && remainingQuantum > 0) {
-          Thread.sleep(1000L);
+          Thread.sleep(unitOfTime);
 
           if (running) {
             burstTime--;
