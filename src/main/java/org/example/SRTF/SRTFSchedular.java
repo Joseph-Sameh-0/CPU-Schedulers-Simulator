@@ -38,6 +38,7 @@ public class SRTFSchedular implements Runnable {
     }
 
     waitingQueue.add(process);
+    process.startwaiting();
   }
   void processFinished(SRTFProcess process) {
     // System.out.println(
@@ -52,8 +53,11 @@ public class SRTFSchedular implements Runnable {
     // Start a timer and increment it every second to simulate the scheduleing
     new Thread(() -> {while (exitedProcessCount < processCount) {
       try {
-        Thread.sleep(1000);
+        Thread.sleep(500);
+        System.out.println("");
+        Thread.sleep(500);
         System.out.println("-----------------------------");
+
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
         break;
@@ -62,12 +66,9 @@ public class SRTFSchedular implements Runnable {
     while (exitedProcessCount < processCount) {
       try {
         Thread.sleep(1000);
-        
         if (!waitingQueue.isEmpty()) {
           // get the process with the shortest remaining time
           SRTFProcess shortestProcess = waitingQueue.peek();
-          
-          
 
           // check if the shortest process is shorter than the currently running process
           if (
