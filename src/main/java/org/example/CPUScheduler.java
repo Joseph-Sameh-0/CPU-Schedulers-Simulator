@@ -35,28 +35,7 @@ public class CPUScheduler {
           final FCAISchedular fCAISchedular;
           fCAISchedular = new FCAISchedular(500); // create a new FCAI scheduler
           fCAISchedular.setProcesses("src/test_cases/AG.txt");
-          // take the choice of selecting the console or the gui
-          boolean ExitFCAI = false;
-          while (!ExitFCAI) {
-            System.out.println("1. console app");
-            System.out.println("2. gui app");
-            System.out.println("3. Exit");
-            choice = scanner.nextInt();
-            // create a new scheduler based on the user's choice
-            switch (choice) {
-              case 1:
-                fCAISchedular.main("console"); // run the FCAI scheduler
-                break;
-              case 2:
-                new Thread(()->{fCAISchedular.main("gui");}).start();  // run the FCAI scheduler
-                break;
-              case 3:
-              ExitFCAI = true;
-                break;
-              default: // if the user enters an invalid choice
-                System.out.println("Invalid choice."); // exit the program
-            }
-          }
+          fCAISchedular.main();
           break;
         case 5:
           exit = true;

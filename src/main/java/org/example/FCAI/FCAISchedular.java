@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Scanner;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
@@ -24,98 +23,87 @@ public class FCAISchedular extends JFrame {
   private JPanel statsPanel;
   private final long unitOfTime;
 
-  private static enum Type {
-    Console,
-    GUI,
-  }
-
-  private Type uiType = Type.Console;
-
   public FCAISchedular(long unitOfTime) {
     this.waitingQueue = new CustomQueue<>();
     this.unitOfTime = unitOfTime;
   }
 
-  void run() {
-    if (uiType == Type.GUI) {
-      //setup the GUI
-      //set the processes information in the GUI
-      setTitle("CPU Scheduling Graph");
-      setSize(800, 600);
-      setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-      setLayout(new BorderLayout());
-
-      // Initialize and configure the graph panel
-      graphPanel =
-        new JPanel() {
-          @Override
-          protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            drawGraph(g); // Custom method to draw the graph
-          }
-        };
-      graphPanel.setBackground(Color.DARK_GRAY);
-      graphPanel.setBorder(new LineBorder(Color.LIGHT_GRAY, 2));
-      add(graphPanel, BorderLayout.CENTER);
-
-      // Initialize and configure the info panel
-      infoPanel = new JPanel();
-      infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
-      infoPanel.setBackground(Color.DARK_GRAY);
-      infoPanel.setPreferredSize(new Dimension(200, getHeight()));
-      infoPanel.setBorder(new LineBorder(Color.LIGHT_GRAY, 2));
-      infoPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-      add(infoPanel, BorderLayout.EAST);
-
-      // Initialize and configure the stats panel
-      statsPanel = new JPanel();
-      statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.Y_AXIS));
-      statsPanel.setBackground(Color.DARK_GRAY);
-      statsPanel.setBorder(new LineBorder(Color.LIGHT_GRAY, 2));
-      statsPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-      add(statsPanel, BorderLayout.SOUTH);
-
-      setupInfoPanel(); // Method to populate the info panel
-      setupStatsPanel(); // Method to populate the stats panel
-
-      setVisible(true);
-    } else {
-      new Thread(() -> {
-        int Time = 0;
-        while (finishedProcesses < processes.size()) {
-          try {
-            Thread.sleep(unitOfTime / 2);
-            System.out.println(
-              "------------------------------------------------------------------------- time " +
-              Time +
-              " -> " +
-              (Time + 1)
-            );
-            Time++;
-            Thread.sleep(unitOfTime / 2);
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            break;
-          }
-        }
-      })
-        .start();
-
-      for (FCAIProcess p : processes) {
-        new Thread(p).start();
-      }
-    }
+  public FCAISchedular() {
+    this(1000);
   }
 
-  public void main(String type) {
-    if (type == "console") {
-      uiType = Type.Console;
-      run();
-    } else if (type == "gui") {
-      uiType = Type.GUI;
-      run();
-    } else {
-      System.out.println("Invalid type. Please choose 'console' or 'gui'.");
+  private void setupGUI() {
+    //setup the GUI
+    //set the processes information in the GUI
+    setTitle("CPU Scheduling Graph");
+    setSize(800, 600);
+    // setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    setLayout(new BorderLayout());
+
+    // Initialize and configure the graph panel
+    graphPanel =
+      new JPanel() {
+        @Override
+        protected void paintComponent(Graphics g) {
+          super.paintComponent(g);
+          drawGraph(g); // Custom method to draw the graph
+        }
+      };
+
+
+    graphPanel.setBackground(Color.DARK_GRAY);
+    graphPanel.setBorder(new LineBorder(Color.LIGHT_GRAY, 2));
+    add(graphPanel, BorderLayout.CENTER);
+
+    // Initialize and configure the info panel
+    infoPanel = new JPanel();
+    infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+    infoPanel.setBackground(Color.DARK_GRAY);
+    infoPanel.setPreferredSize(new Dimension(200, getHeight()));
+    infoPanel.setBorder(new LineBorder(Color.LIGHT_GRAY, 2));
+    infoPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+    add(infoPanel, BorderLayout.EAST);
+
+    // Initialize and configure the stats panel
+    statsPanel = new JPanel();
+    statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.Y_AXIS));
+    statsPanel.setBackground(Color.DARK_GRAY);
+    statsPanel.setBorder(new LineBorder(Color.LIGHT_GRAY, 2));
+    statsPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+    add(statsPanel, BorderLayout.SOUTH);
+
+    setupInfoPanel(); // Method to populate the info panel
+    setupStatsPanel(); // Method to populate the stats panel
+
+    setVisible(true);
+  }
+
+  public void main() {
+    setupGUI();
+
+    new Thread(() -> {
+      int Time = 0;
+      while (finishedProcesses < processes.size()) {
+        try {
+          Thread.sleep(unitOfTime / 2);
+          System.out.println(
+            "------------------------------------------------------------------------- time " +
+            Time +
+            " -> " +
+            (Time + 1)
+          );
+          Time++;
+          Thread.sleep(unitOfTime / 2);
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          break;
+        }
+      }
+    })
+      .start();
+
+    for (FCAIProcess p : processes) {
+      new Thread(p).start();
     }
   }
 
@@ -128,7 +116,7 @@ public class FCAISchedular extends JFrame {
     // Add each process's information
     for (FCAIProcess p : processes) {
       JLabel processInfo = new JLabel(
-        "Process: " + p.name + ", Color: " + p.getColor()
+        "Process: " + p.getName() + ", Color: " + p.getColor()
       );
       processInfo.setForeground(Color.WHITE);
       infoPanel.add(processInfo);
@@ -156,15 +144,39 @@ public class FCAISchedular extends JFrame {
 
   // Method to draw the scheduling graph
   private void drawGraph(Graphics g) {
-    int y = 20; // Initial y-coordinate
+    int counter = 0;
+    final int squareWidth = 50;
+    final int squareHieght = 20;
+    final int separatorWidth = 2;
+
     for (FCAIProcess p : processes) {
-      g.setColor(p.getColor()); // Set color based on process name
-      g.fillRect(50, y, p.burstTime * 10, 20); // Draw rectangle for process
+      int counter2 = 0;
+      int y = p.getNumber() * 20 + counter; // Initial y-coordinate
+      for (int i = 0; i < p.getBurstTime() * 20; i += 20) {
+        g.setColor(p.getColor()); // Set color based on process name
+        g.fillRect(50 + (p.getArrivalTime()*50) + i + counter2 + 1, y, squareWidth, squareHieght); // Draw rectangle for process
+        g.setColor(Color.black); // Set color based on process name
+        g.fillRect(50 + (p.getArrivalTime()*50) + i + 20, y,separatorWidth, squareHieght); // Draw rectangle for process
+        counter2 ++;
+      }
       g.setColor(Color.WHITE);
-      g.drawString(p.name, 55, y + 15); // Draw process name
-      y += 30; // Increment y-coordinate for next process
+      g.drawString(p.getName(), 55, y + 15); // Draw process name
+      counter += 5;
+      // y += 30; // Increment y-coordinate for next process
     }
   }
+
+  // // Method to draw the scheduling graph
+  // private void drawRectangle(Graphics g) {
+  //   for (FCAIProcess p : processes) {
+  //     int y = p.getNumber() * 20; // Initial y-coordinate
+  //     g.setColor(p.getColor()); // Set color based on process name
+  //     g.fillRect(50, y, p.getBurstTime() * 10, 20); // Draw rectangle for process
+  //     g.setColor(Color.WHITE);
+  //     g.drawString(p.getName(), 55, y + 15); // Draw process name
+  //     y += 30; // Increment y-coordinate for next process
+  //   }
+  // }
 
   public void setProcesses(String filename) {
     processes = new ArrayList<>();
@@ -182,6 +194,7 @@ public class FCAISchedular extends JFrame {
 
         processes.add(
           new FCAIProcess(
+            processes.size() + 1,
             processName,
             burstTime,
             arrivalTime,
@@ -327,14 +340,14 @@ class FCAICalc {
 
 class FCAIProcess implements Comparable<FCAIProcess>, Runnable {
 
-  protected final String name;
-  protected int executedTime = 0;
-  protected int burstTime;
-  protected final int arrivalTime;
-  protected final int priority;
-  protected int quantum;
-  protected FCAISchedular schedular;
-  protected Boolean running = false;
+  private final int number;
+  private final String name;
+  private int burstTime;
+  private final int arrivalTime;
+  private final int priority;
+  private int quantum;
+  private FCAISchedular schedular;
+  private Boolean running = false;
   private int remainingQuantum;
   private FCAICalc calc;
   private final Color color;
@@ -352,6 +365,7 @@ class FCAIProcess implements Comparable<FCAIProcess>, Runnable {
   private Status status = Status.NotArrived;
 
   public FCAIProcess(
+    int number,
     String name,
     int burstTime,
     int arrivalTime,
@@ -361,6 +375,7 @@ class FCAIProcess implements Comparable<FCAIProcess>, Runnable {
     long unitOfTime,
     FCAISchedular schedular
   ) {
+    this.number = number;
     this.name = name;
     this.burstTime = burstTime;
     this.arrivalTime = arrivalTime;
@@ -369,6 +384,10 @@ class FCAIProcess implements Comparable<FCAIProcess>, Runnable {
     this.color = color;
     this.unitOfTime = unitOfTime;
     this.schedular = schedular;
+  }
+
+  public int getNumber() {
+    return number;
   }
 
   public String getName() {
