@@ -129,7 +129,7 @@ public class NonPreemptiveSJF extends JFrame {
 
     try (
       BufferedReader br = new BufferedReader(
-        new FileReader("src/test_cases/Process.txt")
+        new FileReader("src/test_cases/SJF.txt")
       )
     ) {
       int n = Integer.parseInt(br.readLine().trim());
