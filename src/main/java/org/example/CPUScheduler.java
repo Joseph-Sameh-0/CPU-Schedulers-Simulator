@@ -4,6 +4,7 @@ import java.util.Scanner;
 import org.example.FCAI.*;
 import org.example.Priority.NonPreemptivePriority;
 import org.example.SJF.NonPreemptiveSJF;
+import org.example.SRTF.SRTFSimulator;
 
 public class CPUScheduler {
 
@@ -29,7 +30,7 @@ public class CPUScheduler {
           NonPreemptiveSJF.main();
           break;
         case 3:
-          // schedular = new SRTFScheduler(); // create a new SRTF scheduler
+          SRTFSimulator.main();
           break;
         case 4:
           final FCAISchedular fCAISchedular;
