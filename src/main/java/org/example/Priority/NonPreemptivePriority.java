@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
-import java.awt.Rectangle;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
@@ -16,7 +15,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import org.example.ColoredRectangle;
@@ -122,6 +120,7 @@ public class NonPreemptivePriority extends JFrame {
     );
   }
 
+
   public void main() {
     ArrayList<Process> processes = new ArrayList<>();
     int contextSwitchTime = 1; // Fixed context switching time in ms
@@ -160,7 +159,7 @@ public class NonPreemptivePriority extends JFrame {
     //set the processes information in the GUI
     setTitle("CPU Scheduling Graph");
     setSize(800, 600);
-    // setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     setLayout(new BorderLayout());
 
     // Center the window on the screen

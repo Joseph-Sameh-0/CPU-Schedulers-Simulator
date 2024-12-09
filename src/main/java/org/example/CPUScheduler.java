@@ -28,8 +28,8 @@ public class CPUScheduler {
           p.main();
           break;
         case 2:
-          NonPreemptiveSJF.main();
-          break;
+        NonPreemptiveSJF sjf = new NonPreemptiveSJF();
+        sjf.main();          break;
         case 3:
           SRTFSimulator.main();
           break;

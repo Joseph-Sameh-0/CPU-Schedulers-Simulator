@@ -42,7 +42,7 @@ public class FCAISchedular extends JFrame {
     //set the processes information in the GUI
     setTitle("CPU Scheduling Graph");
     setSize(800, 600);
-    // setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     setLayout(new BorderLayout());
 
     // Center the window on the screen
