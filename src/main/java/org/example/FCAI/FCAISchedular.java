@@ -5,8 +5,9 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
@@ -22,6 +23,8 @@ public class FCAISchedular extends JFrame {
   private JPanel infoPanel;
   private JPanel statsPanel;
   private final long unitOfTime;
+  private int currTime;
+  private final Map<Integer, List<ColoredRectangle>> highlightedRows = new HashMap<>();
 
   public FCAISchedular(long unitOfTime) {
     this.waitingQueue = new CustomQueue<>();
@@ -40,20 +43,98 @@ public class FCAISchedular extends JFrame {
     // setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     setLayout(new BorderLayout());
 
-    // Initialize and configure the graph panel
+    // Center the window on the screen
+    setLocationRelativeTo(null);
+
+    // Ensure the window appears above others when launched
+    setAlwaysOnTop(true); // Keep it on top during setup
+    setVisible(true); // Make it visible
+    toFront(); // Bring to the front
+    setAlwaysOnTop(false); // Allow normal window behavior afterward
+
     graphPanel =
       new JPanel() {
         @Override
         protected void paintComponent(Graphics g) {
           super.paintComponent(g);
-          drawGraph(g); // Custom method to draw the graph
+
+          int cellWidth = 50; // Width of each time unit
+
+          // Draw the top time row
+          g.setColor(Color.WHITE);
+
+          for (int time = 0; time <= currTime; time++) { // Example: 100 ctime units
+            int x = time * cellWidth;
+            g.drawString(String.valueOf(time), x + 15, 15); // Draw ctime labels
+            g.drawLine(x, 20, x, getHeight()); // Vertical lines for grid
+          }
+
+          // Draw process rows and labels
+          for (FCAIProcess p : processes) {
+            // int rowY = p.getNumber() * 40; // Offset by top row height
+            // g.setColor(Color.WHITE);
+            // g.drawString(p.getName(), 10, rowY + 15);
+
+            // Draw rectangles for this process
+            if (highlightedRows.containsKey(p.getNumber())) {
+              for (ColoredRectangle rect : highlightedRows.get(p.getNumber())) {
+                g.setColor(rect.color);
+                g.fillRect(rect.x, rect.y, rect.width, rect.height);
+                g.setColor(Color.BLACK);
+                g.fillRect(rect.x + rect.width - 2, rect.y, 2, rect.height);
+              }
+            }
+          }
+
+          // Dynamically adjust preferred size
+          int maxWidth = cellWidth * currTime + 200; // Adjust based on total time
+          int maxHeight = processes.size() * 40 + 60; // Account for rows + top row
+          setPreferredSize(new Dimension(maxWidth, maxHeight));
+          revalidate();
         }
       };
-
 
     graphPanel.setBackground(Color.DARK_GRAY);
     graphPanel.setBorder(new LineBorder(Color.LIGHT_GRAY, 2));
     add(graphPanel, BorderLayout.CENTER);
+
+    // Create the panel for process names
+    JPanel processNamesPanel = new JPanel() {
+      @Override
+      protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        g.setColor(Color.WHITE);
+        for (FCAIProcess p : processes) {
+          g.drawString(p.getName(), 10, p.getNumber() * 40 + 15);
+        }
+      }
+    };
+    processNamesPanel.setBackground(Color.DARK_GRAY);
+    processNamesPanel.setPreferredSize(new Dimension(50, 800)); // Fixed width for names
+
+    // Wrap the graphPanel in a JScrollPane
+    JScrollPane graphScrollPane = new JScrollPane(graphPanel);
+    graphScrollPane.setVerticalScrollBarPolicy(
+      JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
+    );
+    graphScrollPane.setHorizontalScrollBarPolicy(
+      JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS
+    );
+
+    // Synchronize vertical scrolling between graphScrollPane and processNamesPanel
+    graphScrollPane
+      .getVerticalScrollBar()
+      .addAdjustmentListener(e -> {
+        processNamesPanel.repaint(); // Repaint names to stay aligned with the graph
+      });
+
+    // Combine the two panels (process names and scrollable graph)
+    JPanel combinedPanel = new JPanel(new BorderLayout());
+    combinedPanel.add(processNamesPanel, BorderLayout.WEST); // Pinned names on the left
+    combinedPanel.add(graphScrollPane, BorderLayout.CENTER); // Scrollable graph on the right
+
+    // Add combinedPanel to the frame
+    add(combinedPanel, BorderLayout.CENTER);
 
     // Initialize and configure the info panel
     infoPanel = new JPanel();
@@ -72,27 +153,73 @@ public class FCAISchedular extends JFrame {
     statsPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
     add(statsPanel, BorderLayout.SOUTH);
 
-    setupInfoPanel(); // Method to populate the info panel
-    setupStatsPanel(); // Method to populate the stats panel
+    // Method to setup the info panel
+    JLabel title = new JLabel("Processes Information");
+    title.setForeground(Color.RED);
+    infoPanel.add(title);
+
+    // Add each process's information
+    for (FCAIProcess p : processes) {
+      JLabel processInfo = new JLabel(
+        "Process: " + p.getName() + ", Color: " + p.getColor()
+      );
+      processInfo.setForeground(Color.WHITE);
+      infoPanel.add(processInfo);
+    }
+
+    JLabel statsTitle = new JLabel("Statistics");
+    statsTitle.setForeground(Color.RED);
+    statsPanel.add(statsTitle);
+
+    // Display average waiting time
+    // JLabel awtLabel = new JLabel("AWT: " + calculateAverageWaitingTime());
+    JLabel awtLabel = new JLabel("AWT: " + 55);
+    awtLabel.setForeground(Color.WHITE);
+    statsPanel.add(awtLabel);
+
+    // Display average turnaround time
+    // JLabel aIATLabel = new JLabel("AIAT: " + calculateAverageTurnaroundTime());
+    JLabel aIATLabel = new JLabel("AIAT: " + 66);
+    aIATLabel.setForeground(Color.WHITE);
+    statsPanel.add(aIATLabel);
 
     setVisible(true);
+  }
+
+  public synchronized void highlightProcessRow(int processNumber, Color color) {
+    final int squareWidth = 50;
+    final int squareHeight = 20;
+    final int y = processNumber * 40; // Calculate the y-coordinate for the row
+    int x = currTime * squareWidth; // Calculate the x-coordinate based on time
+
+    // Append a rectangle to the process row
+    highlightedRows
+      .computeIfAbsent(processNumber, k -> new ArrayList<>()) // Create a list if absent
+      .add(new ColoredRectangle(x, y, squareWidth, squareHeight, color));
+
+    SwingUtilities.invokeLater(() -> {
+      Rectangle rect = new Rectangle(x, y, squareWidth, squareHeight);
+      graphPanel.scrollRectToVisible(rect);
+    });
+
+    graphPanel.repaint(); // Trigger repaint to redraw all rectangles
   }
 
   public void main() {
     setupGUI();
 
     new Thread(() -> {
-      int Time = 0;
+      currTime = 0;
       while (finishedProcesses < processes.size()) {
         try {
           Thread.sleep(unitOfTime / 2);
           System.out.println(
             "------------------------------------------------------------------------- time " +
-            Time +
+            currTime +
             " -> " +
-            (Time + 1)
+            (currTime + 1)
           );
-          Time++;
+          currTime++;
           Thread.sleep(unitOfTime / 2);
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
@@ -107,77 +234,6 @@ public class FCAISchedular extends JFrame {
     }
   }
 
-  // Method to setup the info panel
-  private void setupInfoPanel() {
-    JLabel title = new JLabel("Processes Information");
-    title.setForeground(Color.RED);
-    infoPanel.add(title);
-
-    // Add each process's information
-    for (FCAIProcess p : processes) {
-      JLabel processInfo = new JLabel(
-        "Process: " + p.getName() + ", Color: " + p.getColor()
-      );
-      processInfo.setForeground(Color.WHITE);
-      infoPanel.add(processInfo);
-    }
-  }
-
-  // Method to setup the stats panel
-  private void setupStatsPanel() {
-    JLabel statsTitle = new JLabel("Statistics");
-    statsTitle.setForeground(Color.RED);
-    statsPanel.add(statsTitle);
-
-    // Display average waiting time
-    // JLabel awtLabel = new JLabel("AWT: " + calculateAverageWaitingTime());
-    JLabel awtLabel = new JLabel("AWT: " + 55);
-    awtLabel.setForeground(Color.WHITE);
-    statsPanel.add(awtLabel);
-
-    // Display average turnaround time
-    // JLabel aiatLabel = new JLabel("AIAT: " + calculateAverageTurnaroundTime());
-    JLabel aiatLabel = new JLabel("AIAT: " + 66);
-    aiatLabel.setForeground(Color.WHITE);
-    statsPanel.add(aiatLabel);
-  }
-
-  // Method to draw the scheduling graph
-  private void drawGraph(Graphics g) {
-    int counter = 0;
-    final int squareWidth = 50;
-    final int squareHieght = 20;
-    final int separatorWidth = 2;
-
-    for (FCAIProcess p : processes) {
-      int counter2 = 0;
-      int y = p.getNumber() * 20 + counter; // Initial y-coordinate
-      for (int i = 0; i < p.getBurstTime() * 20; i += 20) {
-        g.setColor(p.getColor()); // Set color based on process name
-        g.fillRect(50 + (p.getArrivalTime()*50) + i + counter2 + 1, y, squareWidth, squareHieght); // Draw rectangle for process
-        g.setColor(Color.black); // Set color based on process name
-        g.fillRect(50 + (p.getArrivalTime()*50) + i + 20, y,separatorWidth, squareHieght); // Draw rectangle for process
-        counter2 ++;
-      }
-      g.setColor(Color.WHITE);
-      g.drawString(p.getName(), 55, y + 15); // Draw process name
-      counter += 5;
-      // y += 30; // Increment y-coordinate for next process
-    }
-  }
-
-  // // Method to draw the scheduling graph
-  // private void drawRectangle(Graphics g) {
-  //   for (FCAIProcess p : processes) {
-  //     int y = p.getNumber() * 20; // Initial y-coordinate
-  //     g.setColor(p.getColor()); // Set color based on process name
-  //     g.fillRect(50, y, p.getBurstTime() * 10, 20); // Draw rectangle for process
-  //     g.setColor(Color.WHITE);
-  //     g.drawString(p.getName(), 55, y + 15); // Draw process name
-  //     y += 30; // Increment y-coordinate for next process
-  //   }
-  // }
-
   public void setProcesses(String filename) {
     processes = new ArrayList<>();
     try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
@@ -191,6 +247,10 @@ public class FCAISchedular extends JFrame {
         int arrivalTime = Integer.parseInt(parts[2]);
         int priority = Integer.parseInt(parts[3]);
         int quantum = Integer.parseInt(parts[4]);
+        String colorHex = parts[5]; // The hexadecimal color string from the file
+
+        // Convert the hexadecimal string to a Color object
+        Color processColor = getColorFromHex(colorHex);
 
         processes.add(
           new FCAIProcess(
@@ -200,7 +260,7 @@ public class FCAISchedular extends JFrame {
             arrivalTime,
             priority,
             quantum,
-            Color.red, ///
+            processColor, // Use the color parsed from the file
             unitOfTime,
             this
           )
@@ -219,6 +279,15 @@ public class FCAISchedular extends JFrame {
       }
     } catch (IOException e) {
       System.out.println("Error reading the file: " + e.getMessage());
+    }
+  }
+
+  // Method to convert a hexadecimal color string to a Color object
+  private Color getColorFromHex(String hexColor) {
+    try {
+      return Color.decode(hexColor); // Convert the hex string to a Color object
+    } catch (NumberFormatException e) {
+      return Color.GRAY; // Default color if the hex code is invalid
     }
   }
 
@@ -307,314 +376,5 @@ public class FCAISchedular extends JFrame {
       return true;
     }
     return false;
-  }
-}
-
-class FCAICalc {
-
-  final double v1;
-  final double v2;
-
-  FCAICalc(int lastArrivalTime, int maxBurstTime) {
-    this.v1 = (double) lastArrivalTime / 10;
-    this.v2 = (double) maxBurstTime / 10;
-  }
-
-  int calcFactor(FCAIProcess p) {
-    double factor =
-      (10 - p.getPriority()) +
-      Math.ceil((p.getArrivalTime() / v1)) +
-      Math.ceil((p.getBurstTime() / v2));
-
-    return ((int) Math.ceil(factor));
-  }
-
-  public static void updateQuantum(FCAIProcess p) {
-    if (p.getRemainingQuantum() == 0) {
-      p.setQuantum(p.getQuantum() + 2);
-    } else {
-      p.setQuantum(p.getQuantum() + p.getRemainingQuantum());
-    }
-  }
-}
-
-class FCAIProcess implements Comparable<FCAIProcess>, Runnable {
-
-  private final int number;
-  private final String name;
-  private int burstTime;
-  private final int arrivalTime;
-  private final int priority;
-  private int quantum;
-  private FCAISchedular schedular;
-  private Boolean running = false;
-  private int remainingQuantum;
-  private FCAICalc calc;
-  private final Color color;
-  private final long unitOfTime;
-
-  public Color getColor() {
-    return color;
-  }
-
-  private static enum Status {
-    NotArrived,
-    Arrived,
-  }
-
-  private Status status = Status.NotArrived;
-
-  public FCAIProcess(
-    int number,
-    String name,
-    int burstTime,
-    int arrivalTime,
-    int priority,
-    int quantum,
-    Color color,
-    long unitOfTime,
-    FCAISchedular schedular
-  ) {
-    this.number = number;
-    this.name = name;
-    this.burstTime = burstTime;
-    this.arrivalTime = arrivalTime;
-    this.priority = priority;
-    this.quantum = quantum;
-    this.color = color;
-    this.unitOfTime = unitOfTime;
-    this.schedular = schedular;
-  }
-
-  public int getNumber() {
-    return number;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public int getBurstTime() {
-    return burstTime;
-  }
-
-  public int getArrivalTime() {
-    return arrivalTime;
-  }
-
-  public int getPriority() {
-    return priority;
-  }
-
-  public int getQuantum() {
-    return quantum;
-  }
-
-  public void setQuantum(int quantum) {
-    this.quantum = quantum;
-  }
-
-  public int getRemainingQuantum() {
-    return remainingQuantum;
-  }
-
-  public void setCalc(FCAICalc calc) {
-    this.calc = calc;
-  }
-
-  public int getFactor() {
-    return calc.calcFactor(this);
-  }
-
-  @Override
-  public void run() {
-    if (status == Status.NotArrived) {
-      status = Status.Arrived;
-      try {
-        Thread.sleep(arrivalTime * unitOfTime);
-        // System.out.println("Process " + name + " arrived");
-        new Thread(() -> {
-          schedular.process(this);
-        })
-          .start();
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-      }
-    } else {
-      // System.out.println("FCAIProcess " + name + " executes");
-      System.out.println(
-        "FCAIProcess " +
-        name +
-        " running -> remainingQuantum:" +
-        quantum +
-        " burstTime: " +
-        burstTime
-      );
-
-      try {
-        remainingQuantum = quantum;
-        running = true;
-        while (running && burstTime > 0 && remainingQuantum > 0) {
-          Thread.sleep(unitOfTime);
-
-          if (running) {
-            burstTime--;
-            remainingQuantum--;
-
-            System.out.println(
-              "FCAIProcess " +
-              name +
-              " running -> remainingQuantum:" +
-              remainingQuantum +
-              " burstTime: " +
-              burstTime
-            );
-            // System.out.println(
-            //   "FCAIProcess " +
-            //   name +
-            //   " running -> remainingQuantum:" +
-            //   remainingQuantum +
-            //   " burstTime: " +
-            //   burstTime
-            // );
-
-            if (running && isPreemptive()) {
-              boolean signal = schedular.signal();
-              if (signal) {
-                if (burstTime > 0) {
-                  running = false;
-                  // System.out.println("Process " + name + " preempted");
-                  // System.out.print(
-                  //   "FCAIProcess " + name + " quantum updated from " + quantum
-                  // );
-                  FCAICalc.updateQuantum(this);
-                  // System.out.println(" to " + quantum);
-                  return;
-                } else if (burstTime == 0) {
-                  running = false;
-                  // System.out.println("FCAIProcess " + name + " finished");
-                  return;
-                }
-              }
-            }
-          }
-        }
-
-        boolean signal = schedular.signal();
-        if (signal) {
-          if (burstTime == 0) {
-            running = false;
-            // System.out.println("FCAIProcess " + name + " finished");
-            return;
-          } else {
-            running = false;
-            // System.out.println("FCAIProcess " + name + " preempted");
-            // System.out.print(
-            // "FCAIProcess " + name + " quantum updated from " + quantum
-            // );
-            FCAICalc.updateQuantum(this);
-            // System.out.println(" to " + quantum);
-            return;
-          }
-        } else {
-          if (burstTime > 0) {
-            running = true;
-            // System.out.print(
-            //   "FCAIProcess " + name + " quantum updated from " + quantum
-            // );
-            FCAICalc.updateQuantum(this);
-            // System.out.println(" to " + quantum);
-            //run again
-            run();
-            return;
-          } else {
-            running = false;
-            // System.out.println("FCAIProcess " + name + " finished");
-            return;
-          }
-        }
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-      }
-    }
-  }
-
-  public Boolean isPreemptive() {
-    double preemptiveFactor = (quantum - remainingQuantum) / (double) quantum;
-    // System.out.println("preemptiveFactor = " + preemptiveFactor);
-    if (preemptiveFactor >= 0.4) {
-      // System.out.println(p.getName() + " is Preemptive");
-      return true;
-    }
-    // System.out.println(p.getName() + " is not Preemptive");
-    return false;
-  }
-
-  @Override
-  public int compareTo(FCAIProcess other) {
-    return Integer.compare(calc.calcFactor(this), calc.calcFactor(other));
-  }
-}
-
-class CustomQueue<T extends Comparable<T>> {
-
-  private final List<T> list;
-
-  public CustomQueue() {
-    this.list = Collections.synchronizedList(new ArrayList<>());
-  }
-
-  // Add an element to the list
-  public void add(T element) {
-    list.add(element);
-  }
-
-  // Get the "first in" element
-  public T getFirstIn() {
-    synchronized (list) {
-      return list.isEmpty() ? null : list.get(0);
-    }
-  }
-
-  // Get the smallest element
-  public T getSmallest() {
-    synchronized (list) {
-      if (list.isEmpty()) {
-        return null;
-      }
-      T smallest = list.get(0);
-      for (T element : list) {
-        if (element.compareTo(smallest) < 0) {
-          smallest = element;
-        }
-      }
-      return smallest;
-    }
-  }
-
-  // Remove the "first in" element
-  public T removeFirstIn() {
-    synchronized (list) {
-      return list.isEmpty() ? null : list.remove(0);
-    }
-  }
-
-  // Remove the smallest element
-  public T removeSmallest() {
-    synchronized (list) {
-      if (list.isEmpty()) {
-        return null;
-      }
-      T smallest = getSmallest();
-      list.remove(smallest);
-      return smallest;
-    }
-  }
-
-  // Check if the queue is empty
-  public boolean isEmpty() {
-    synchronized (list) {
-      return list.isEmpty();
-    }
   }
 }
