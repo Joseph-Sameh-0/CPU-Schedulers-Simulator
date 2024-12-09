@@ -12,6 +12,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
+import org.example.ColoredRectangle;
+
 public class FCAISchedular extends JFrame {
 
   FCAICalc calc;
@@ -50,7 +52,7 @@ public class FCAISchedular extends JFrame {
     setAlwaysOnTop(true); // Keep it on top during setup
     setVisible(true); // Make it visible
     toFront(); // Bring to the front
-    setAlwaysOnTop(false); // Allow normal window behavior afterward
+    // setAlwaysOnTop(false); // Allow normal window behavior afterward
 
     graphPanel =
       new JPanel() {

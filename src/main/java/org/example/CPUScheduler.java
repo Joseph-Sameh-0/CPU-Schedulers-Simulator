@@ -24,7 +24,8 @@ public class CPUScheduler {
       // create a new scheduler based on the user's choice
       switch (choice) {
         case 1:
-          NonPreemptivePriority.main();
+          NonPreemptivePriority p = new NonPreemptivePriority();
+          p.main();
           break;
         case 2:
           NonPreemptiveSJF.main();
