@@ -207,24 +207,8 @@ public class FCAISchedular extends JFrame {
     graphPanel.repaint(); // Trigger repaint to redraw all rectangles
   }
 
-  public synchronized void deHighlightProcessRow(int processNumber, Color color) {
-    final int squareWidth = 50;
-    final int squareHeight = 20;
-    final int y = processNumber * 40; // Calculate the y-coordinate for the row
-    int x = currTime * squareWidth; // Calculate the x-coordinate based on time
-
-    // Append a rectangle to the process row
-    // ColoredRectangle rec  = new ColoredRectangle(x, y, squareWidth, squareHeight, color);
-    // rec.setId(squareWidth);
+  public synchronized void deHighlightProcessRow(int processNumber) {
     highlightedRows.get(processNumber).remove(highlightedRows.get(processNumber).size()-1);
-      // .add(new ColoredRectangle(x, y, squareWidth, squareHeight, color));
-
-    SwingUtilities.invokeLater(() -> {
-      Rectangle rect = new Rectangle(x, y, squareWidth, squareHeight);
-      graphPanel.scrollRectToVisible(rect);
-    });
-
-    graphPanel.repaint(); // Trigger repaint to redraw all rectangles
   }
 
 
@@ -340,7 +324,7 @@ public class FCAISchedular extends JFrame {
           System.out.println(
             "FCAIprocess " + runningProcess.getName() + " finished the quantum"
           );
-          deHighlightProcessRow(runningProcess.getNumber(), runningProcess.getColor());
+          deHighlightProcessRow(runningProcess.getNumber());
           // runningProcess.interrupt();
           waitingQueue.add(runningProcess);
           runningProcess = waitingQueue.removeFirstIn();
@@ -355,7 +339,7 @@ public class FCAISchedular extends JFrame {
           System.out.println(
             "FCAIprocess " + runningProcess.getName() + " finished"
           );
-          deHighlightProcessRow(runningProcess.getNumber(), runningProcess.getColor());
+          deHighlightProcessRow(runningProcess.getNumber());
           finishedProcesses++;
           // runningProcess.interrupt();
           runningProcess = waitingQueue.removeFirstIn();
@@ -372,7 +356,7 @@ public class FCAISchedular extends JFrame {
           System.out.println(
             "FCAI process " + runningProcess.getName() + " interrupted"
           );
-          deHighlightProcessRow(runningProcess.getNumber(), runningProcess.getColor());
+          deHighlightProcessRow(runningProcess.getNumber());
           waitingQueue.add(runningProcess);
           runningProcess = waitingQueue.removeSmallest();
           new Thread(runningProcess).start();
@@ -389,7 +373,7 @@ public class FCAISchedular extends JFrame {
         System.out.println(
           "FCAIprocess " + runningProcess.getName() + " finished"
         );
-        deHighlightProcessRow(runningProcess.getNumber(), runningProcess.getColor());
+        deHighlightProcessRow(runningProcess.getNumber());
         finishedProcesses++;
         runningProcess = null;
         return true;
