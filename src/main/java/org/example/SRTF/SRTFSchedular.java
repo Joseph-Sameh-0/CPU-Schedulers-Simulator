@@ -163,7 +163,7 @@ public class SRTFSchedular extends JFrame implements Runnable {
         //set up the GUI
         //set the processes information in the GUI
         setTitle("CPU Scheduling Graph");
-        setSize(1000, 600);
+        setSize(1100, 600);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
@@ -261,7 +261,7 @@ public class SRTFSchedular extends JFrame implements Runnable {
         infoPanel = new JPanel();
         infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
         infoPanel.setBackground(Color.DARK_GRAY);
-        infoPanel.setPreferredSize(new Dimension(400, getHeight()));
+        infoPanel.setPreferredSize(new Dimension(500, getHeight()));
         infoPanel.setBorder(new LineBorder(Color.LIGHT_GRAY, 2));
         infoPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
         add(infoPanel, BorderLayout.EAST);
@@ -298,7 +298,7 @@ public class SRTFSchedular extends JFrame implements Runnable {
         setVisible(true);
     }
 
-    public synchronized void setupProcess(SRTFProcess process) {
+    public void setupProcess(SRTFProcess process) {
         Graphics graphPanelGraphics = graphPanel.getGraphics();
         int rowY = process.getNumber() * 40; // Offset by top row height
         graphPanelGraphics.setColor(Color.WHITE);
@@ -310,11 +310,6 @@ public class SRTFSchedular extends JFrame implements Runnable {
 //        Color color = process.getColor();
 ////        String hexColor = String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
 //        String processColor = "RGB: (" + color.getRed() + ", " + color.getGreen() + ", " + color.getBlue() + ")";
-//        JLabel processInfoLabel = new JLabel("Process " + process.getName() + " arrived at " + process.getArrivalTime() + " burstTime = " + process.getBurstTime() + " color is \n" + processColor);
-//        processInfoLabel.setForeground(Color.WHITE);
-//        infoPanel.add(processInfoLabel);
-//        infoPanel.revalidate();
-//        infoPanel.repaint();
 
         // Create a table model to store the process information
         DefaultTableModel tableModel = new DefaultTableModel();
@@ -328,15 +323,13 @@ public class SRTFSchedular extends JFrame implements Runnable {
                 process.getName(),
                 process.getArrivalTime(),
                 process.getBurstTime(),
-                process.getColor().getRed() + ", " + process.getColor().getGreen() + ", " + process.getColor().getBlue()
+                "RGB: (" + process.getColor().getRed() + ", " + process.getColor().getGreen() + ", " + process.getColor().getBlue()+")"
         });
 
         // Create a JTable component to display the table
         JTable processTable = new JTable(tableModel);
 
         // Set the background color of the table's rows
-//        processTable.setSelectionBackground(Color.DARK_GRAY);
-//        processTable.setSelectionForeground(Color.WHITE);
         processTable.setBackground(Color.LIGHT_GRAY);
 
         // Set the background color of the table's columns
@@ -351,10 +344,11 @@ public class SRTFSchedular extends JFrame implements Runnable {
         processTable.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
         processTable.getColumnModel().getColumn(3).setCellRenderer(centerRenderer);
 
+
         // Add the table to the info panel
         infoPanel.add(new JScrollPane(processTable));
+        processTable.getParent().setBackground(Color.DARK_GRAY);
         infoPanel.revalidate();
         infoPanel.repaint();
     }
-
 }
