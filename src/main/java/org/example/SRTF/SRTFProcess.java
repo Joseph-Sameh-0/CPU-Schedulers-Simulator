@@ -107,6 +107,7 @@ public class SRTFProcess implements Comparable<SRTFProcess>, Runnable {
                         burstTime
         );
         schedular.highlightProcessRow(number, color);
+        // create a new thread for the try
         try {
             running = true;
             while (running && remainingTime > 0) {
@@ -114,6 +115,10 @@ public class SRTFProcess implements Comparable<SRTFProcess>, Runnable {
                 if (running) {
                     remainingTime--;
                     effectiveRemainingTime = (int) Math.floor(this.getRemainingTime() - (this.getWaitingTime() / agingFactor));
+                    if (remainingTime == 0) {
+                        break;
+                        
+                    }
                     System.out.println(
                             "Process " +
                                     name +
@@ -122,9 +127,8 @@ public class SRTFProcess implements Comparable<SRTFProcess>, Runnable {
                                     " burstTime: " +
                                     burstTime
                     );
-                    if (remainingTime > 0) {
-                        schedular.highlightProcessRow(number, color);
-                    }
+                    schedular.highlightProcessRow(number, color);
+                    
                 }
             }
 
