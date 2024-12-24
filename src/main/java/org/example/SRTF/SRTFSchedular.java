@@ -55,7 +55,7 @@ public class SRTFSchedular extends JFrame implements Runnable {
         //   "SRTFScheduler process the " + process.getName() + " process"
         // );
 
-        if (runningProcess == null) {
+        if (runningProcess == null && waitingQueue.isEmpty()) {
             // System.out.println("No process is running");
 
             runningProcess = process;
@@ -63,8 +63,9 @@ public class SRTFSchedular extends JFrame implements Runnable {
 
             return;
         }
-
+        System.out.println("Adding process to waiting queue " + process.getName());
         waitingQueue.add(process);
+        System.out.println("waiting queue size " + waitingQueue.size());
         process.startwaiting();
     }
 
@@ -77,6 +78,7 @@ public class SRTFSchedular extends JFrame implements Runnable {
         exitedProcessCount++;
         System.out.println("exited process count " + exitedProcessCount);
 
+        
     }
 
     @Override
@@ -88,8 +90,8 @@ public class SRTFSchedular extends JFrame implements Runnable {
                     Thread.sleep(500);
                     System.out.println("");
                     Thread.sleep(500);
-                    System.out.println("----------------------------- currTime: " + currTime);
                     currTime++;
+                    System.out.println("----------------------------- currTime: " + currTime);
 
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -100,15 +102,22 @@ public class SRTFSchedular extends JFrame implements Runnable {
 
         while (exitedProcessCount < processCount) {
             try {
-                Thread.sleep(1000);
+                
+                System.out.println("waiting queue size " + waitingQueue.size());
                 if (!waitingQueue.isEmpty()) {
                     // get the process with the shortest remaining time
                     SRTFProcess shortestProcess = waitingQueue.peek();
-
+                    // print the remaining time of shortest process and running process
+                    System.out.println("shortest process remaining time " + shortestProcess.getRemainingTime());
+                    // print hte whole waiting queue for debug
+                    System.out.println("waiting queue");
+                    for (SRTFProcess p : waitingQueue) {
+                        System.out.println(p.getName() + " " + p.getEffectiveRemainingTime());
+                    }
                     // check if the shortest process is shorter than the currently running process
                     if (
                             runningProcess == null ||
-                                    shortestProcess.getRemainingTime() < runningProcess.getRemainingTime()
+                                    shortestProcess.getEffectiveRemainingTime() < runningProcess.getEffectiveRemainingTime()
                     ) {
                         // if the shortest process is shorter than the currently running process
                         // then interrupt the current process and execute the shortest process
@@ -117,9 +126,21 @@ public class SRTFSchedular extends JFrame implements Runnable {
                         if (runningProcess != null) {
                             highlightProcessRow(runningProcess.getNumber(), Color.GRAY);
                             runningProcess.running = false;
+                            // add the running process to the waiting queue
+                            SRTFProcess currentRunningProcess = runningProcess;
+                            currentRunningProcess.setRemainingTime(currentRunningProcess.getRemainingTime() - 1);
+                            waitingQueue.add(currentRunningProcess);
+                            new Thread(()->{currentRunningProcess.startwaiting();}).start();
+                            
+                            
+  
                         }
-                        runningProcess = shortestProcess;
-                        highlightProcessRow(runningProcess.getNumber(), Color.GRAY);
+                            
+                          runningProcess = shortestProcess;
+                          highlightProcessRow(runningProcess.getNumber(), Color.GRAY);
+                        
+                        
+                        
                         System.out.println("switching....context");
                         Thread.sleep(1000L);
                         System.out.println("finished....switching....context");
@@ -127,6 +148,7 @@ public class SRTFSchedular extends JFrame implements Runnable {
 
                     }
                 }
+            Thread.sleep(1000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;
@@ -135,6 +157,7 @@ public class SRTFSchedular extends JFrame implements Runnable {
         }
 
     }
+
 
     public synchronized void highlightProcessRow(int processNumber, Color color) {
         final int squareWidth = 50;

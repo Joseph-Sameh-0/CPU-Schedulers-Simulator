@@ -15,7 +15,7 @@ public class SRTFSimulator {
         processes = new ArrayList<>();
         schedular = new SRTFSchedular(processCount);
 
-        new Thread(schedular).start();
+        
     }
 
     public void setProcesses(String filename) {
@@ -59,7 +59,7 @@ public class SRTFSimulator {
 
         // Read processes from file
         Mainscheduler.setProcesses("src/test_cases/SRTF.txt");
-
+        new Thread(Mainscheduler.schedular).start();
         Mainscheduler.run();
 
     }

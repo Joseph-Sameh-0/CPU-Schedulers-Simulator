@@ -13,8 +13,8 @@ public class SRTFProcess implements Comparable<SRTFProcess>, Runnable {
     protected Boolean running = false;
     private int remainingTime;
     private int waitingTime = 0;
-    private int effectiveRemainingTime = 0;
-    double agingFactor = 0.8;
+    private int effectiveRemainingTime;
+    double agingFactor = 1;
     private final Color color;
 
     public SRTFProcess(
@@ -30,6 +30,7 @@ public class SRTFProcess implements Comparable<SRTFProcess>, Runnable {
         this.burstTime = burstTime;
         this.arrivalTime = arrivalTime;
         this.remainingTime = burstTime;
+        this.effectiveRemainingTime = burstTime;
         this.schedular = schedular;
         this.color = color;
     }
@@ -86,7 +87,7 @@ public class SRTFProcess implements Comparable<SRTFProcess>, Runnable {
     @Override
     public void run() {
         try {
-            Thread.sleep(arrivalTime * 1000L);
+            Thread.sleep((arrivalTime * 1000) + 5);
             // System.out.println("Process " + name + " arrived");
             System.out.println("process " + name + " pinged the scheduler");
             schedular.process(this);
@@ -150,6 +151,14 @@ public class SRTFProcess implements Comparable<SRTFProcess>, Runnable {
                 Thread.sleep(1000L);
                 waitingTime++;
                 effectiveRemainingTime = (int) Math.floor(this.getRemainingTime() - (this.getWaitingTime() / agingFactor));
+                System.out.println(
+                        "Process " +
+                                name +
+                                " waiting -> remainingTime:" +
+                                effectiveRemainingTime +
+                                " burstTime: " +
+                                burstTime
+                );
 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
