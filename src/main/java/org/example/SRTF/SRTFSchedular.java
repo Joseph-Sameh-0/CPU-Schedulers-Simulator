@@ -68,7 +68,7 @@ public class SRTFSchedular extends JFrame implements Runnable {
         }
         System.out.println("Adding process to waiting queue " + process.getName());
         waitingQueue.add(process);
-        System.out.println("waiting queue size " + waitingQueue.size());
+        // System.out.println("waiting queue size " + waitingQueue.size());
         process.startwaiting();
     }
 
@@ -76,7 +76,7 @@ public class SRTFSchedular extends JFrame implements Runnable {
         // System.out.println(
         //   "SRTFScheduler finished the " + process.getName() + " process"
         // );
-        highlightProcessRow(runningProcess.getNumber(), Color.GRAY);
+        // highlightProcessRow(runningProcess.getNumber(), Color.GRAY);
         runningProcess = null;
         exitedProcessCount++;
         System.out.println("exited process count " + exitedProcessCount);
@@ -92,9 +92,9 @@ public class SRTFSchedular extends JFrame implements Runnable {
                 try {
                     Thread.sleep(500);
                     System.out.print("");
-                    Thread.sleep(500);
                     currTime++;
                     System.out.println("----------------------------- currTime: " + currTime);
+                    Thread.sleep(500);
 
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -106,7 +106,7 @@ public class SRTFSchedular extends JFrame implements Runnable {
         while (exitedProcessCount < processCount) {
             try {
 
-                System.out.println("waiting queue size " + waitingQueue.size());
+                // System.out.println("waiting queue size " + waitingQueue.size());
                 if(!swiching){
                     if (!waitingQueue.isEmpty()) {
                         if (runningProcess == null || runningProcess.getRemainingTime() == 0){
@@ -122,7 +122,7 @@ public class SRTFSchedular extends JFrame implements Runnable {
                                 highlightProcessRow(runningProcess.getNumber(), Color.GRAY);
                                 System.out.println("finished....switching....context");
                                 try {
-                                    Thread.sleep(800L);
+                                    Thread.sleep(900);
                                 } catch (InterruptedException e) {
                                     throw new RuntimeException(e);
                                 }
@@ -139,7 +139,7 @@ public class SRTFSchedular extends JFrame implements Runnable {
                             // get the process with the shortest remaining time
                             SRTFProcess shortestProcess = waitingQueue.peek();
                             // print the remaining time of shortest process and running process
-                            System.out.println("shortest process remaining time " + shortestProcess.getRemainingTime());
+                            // System.out.println("shortest process remaining time " + shortestProcess.getRemainingTime());
                             // print hte whole waiting queue for debug
 //                            System.out.println("waiting queue");
 //                            for (SRTFProcess p : waitingQueue) {
@@ -169,7 +169,7 @@ public class SRTFSchedular extends JFrame implements Runnable {
                                 swiching = true;
                                 new Thread(()->{
                                     try {
-                                        Thread.sleep(800L);
+                                        Thread.sleep(900);
                                     } catch (InterruptedException e) {
                                         throw new RuntimeException(e);
                                     }
@@ -188,7 +188,7 @@ public class SRTFSchedular extends JFrame implements Runnable {
                     }
                 }
 
-            Thread.sleep(1000);
+            Thread.sleep(10);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;

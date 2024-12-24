@@ -87,7 +87,7 @@ public class SRTFProcess implements Comparable<SRTFProcess>, Runnable {
     @Override
     public void run() {
         try {
-            Thread.sleep((arrivalTime * 1000) + 5);
+            Thread.sleep((arrivalTime * 1000));
             // System.out.println("Process " + name + " arrived");
             System.out.println("process " + name + " pinged the scheduler");
             new Thread(()->{
