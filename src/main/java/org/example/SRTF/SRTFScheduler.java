@@ -15,7 +15,7 @@ import org.example.ColoredRectangle;
 
 import java.util.PriorityQueue;
 
-public class SRTFSchedular extends JFrame implements Runnable {
+public class SRTFScheduler extends JFrame implements Runnable {
     private final int processCount;
     private int exitedProcessCount = 0;
     SRTFProcess runningProcess;
@@ -36,7 +36,7 @@ public class SRTFSchedular extends JFrame implements Runnable {
     private boolean swiching;
 
 
-    public SRTFSchedular(int processCount) {
+    public SRTFScheduler(int processCount) {
         waitingQueue = new PriorityQueue<>();
         this.processCount = processCount;
     }
@@ -122,7 +122,7 @@ public class SRTFSchedular extends JFrame implements Runnable {
                                 highlightProcessRow(runningProcess.getNumber(), Color.GRAY);
                                 System.out.println("finished....switching....context");
                                 try {
-                                    Thread.sleep(900);
+                                    Thread.sleep(1000);
                                 } catch (InterruptedException e) {
                                     throw new RuntimeException(e);
                                 }
@@ -168,14 +168,14 @@ public class SRTFSchedular extends JFrame implements Runnable {
 //                            currentRunningProcess.setRemainingTime(currentRunningProcess.getRemainingTime() - 1);
                                 swiching = true;
                                 new Thread(()->{
-                                    try {
-                                        Thread.sleep(900);
-                                    } catch (InterruptedException e) {
-                                        throw new RuntimeException(e);
-                                    }
                                     System.out.println("switching....context");
                                 highlightProcessRow(runningProcess.getNumber(), Color.GRAY);
                                 System.out.println("finished....switching....context");
+                                    try {
+                                        Thread.sleep(1000);
+                                    } catch (InterruptedException e) {
+                                        throw new RuntimeException(e);
+                                    }
 
                                 new Thread(()->{
                                     runningProcess.execute();

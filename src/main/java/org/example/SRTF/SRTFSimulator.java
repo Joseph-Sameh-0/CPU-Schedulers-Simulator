@@ -8,12 +8,12 @@ import java.util.List;
 
 public class SRTFSimulator {
 
-    private SRTFSchedular schedular;
+    private SRTFScheduler schedular;
     private List<SRTFProcess> processes;
 
     public SRTFSimulator(int processCount) {
         processes = new ArrayList<>();
-        schedular = new SRTFSchedular(processCount);
+        schedular = new SRTFScheduler(processCount);
 
         
     }

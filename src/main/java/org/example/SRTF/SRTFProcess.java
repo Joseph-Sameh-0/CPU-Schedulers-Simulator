@@ -9,7 +9,7 @@ public class SRTFProcess implements Comparable<SRTFProcess>, Runnable {
     protected int executedTime = 0;
     protected int burstTime;
     protected final int arrivalTime;
-    protected SRTFSchedular schedular;
+    protected SRTFScheduler scheduler;
     protected Boolean running = false;
     private int remainingTime;
     private int waitingTime = 0;
@@ -22,7 +22,7 @@ public class SRTFProcess implements Comparable<SRTFProcess>, Runnable {
             String name,
             int burstTime,
             int arrivalTime,
-            SRTFSchedular schedular,
+            SRTFScheduler schedular,
             Color color
     ) {
         this.number = number;
@@ -31,7 +31,7 @@ public class SRTFProcess implements Comparable<SRTFProcess>, Runnable {
         this.arrivalTime = arrivalTime;
         this.remainingTime = burstTime;
         this.effectiveRemainingTime = burstTime;
-        this.schedular = schedular;
+        this.scheduler = schedular;
         this.color = color;
     }
 
@@ -91,7 +91,7 @@ public class SRTFProcess implements Comparable<SRTFProcess>, Runnable {
             // System.out.println("Process " + name + " arrived");
             System.out.println("process " + name + " pinged the scheduler");
             new Thread(()->{
-                schedular.process(this);
+                scheduler.process(this);
             }).start();
 
         } catch (InterruptedException e) {
@@ -109,7 +109,7 @@ public class SRTFProcess implements Comparable<SRTFProcess>, Runnable {
                         " burstTime: " +
                         burstTime
         );
-        schedular.highlightProcessRow(number, color);
+        scheduler.highlightProcessRow(number, color);
         // create a new thread for the try
         try {
             running = true;
@@ -130,7 +130,7 @@ public class SRTFProcess implements Comparable<SRTFProcess>, Runnable {
                                     " burstTime: " +
                                     burstTime
                     );
-                    schedular.highlightProcessRow(number, color);
+                    scheduler.highlightProcessRow(number, color);
                     
                 }
             }
@@ -139,7 +139,7 @@ public class SRTFProcess implements Comparable<SRTFProcess>, Runnable {
             if (remainingTime == 0) {
                 System.out.println("Process " + name + " finished");
                 running = false;
-                schedular.processFinished(this);
+                scheduler.processFinished(this);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
