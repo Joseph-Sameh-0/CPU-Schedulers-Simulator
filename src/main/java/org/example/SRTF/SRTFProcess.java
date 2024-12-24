@@ -90,7 +90,9 @@ public class SRTFProcess implements Comparable<SRTFProcess>, Runnable {
             Thread.sleep((arrivalTime * 1000) + 5);
             // System.out.println("Process " + name + " arrived");
             System.out.println("process " + name + " pinged the scheduler");
-            schedular.process(this);
+            new Thread(()->{
+                schedular.process(this);
+            }).start();
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -154,8 +156,10 @@ public class SRTFProcess implements Comparable<SRTFProcess>, Runnable {
                 System.out.println(
                         "Process " +
                                 name +
-                                " waiting -> remainingTime:" +
+                                " waiting -> effectiveRemainingTime:" +
                                 effectiveRemainingTime +
+                                " remaining time"+
+                                remainingTime +
                                 " burstTime: " +
                                 burstTime
                 );

@@ -33,6 +33,7 @@ public class SRTFSchedular extends JFrame implements Runnable {
     private PriorityQueue<SRTFProcess> waitingQueue = new PriorityQueue<>(
             (p1, p2) -> Integer.compare(p1.getRemainingTime(), p2.getRemainingTime())
     );
+    private boolean swiching;
 
 
     public SRTFSchedular(int processCount) {
@@ -59,7 +60,9 @@ public class SRTFSchedular extends JFrame implements Runnable {
             // System.out.println("No process is running");
 
             runningProcess = process;
-            runningProcess.execute();
+            new Thread(()->{
+                runningProcess.execute();
+            }).start();
 
             return;
         }
@@ -73,7 +76,7 @@ public class SRTFSchedular extends JFrame implements Runnable {
         // System.out.println(
         //   "SRTFScheduler finished the " + process.getName() + " process"
         // );
-
+        highlightProcessRow(runningProcess.getNumber(), Color.GRAY);
         runningProcess = null;
         exitedProcessCount++;
         System.out.println("exited process count " + exitedProcessCount);
@@ -88,7 +91,7 @@ public class SRTFSchedular extends JFrame implements Runnable {
             while (exitedProcessCount < processCount) {
                 try {
                     Thread.sleep(500);
-                    System.out.println("");
+                    System.out.print("");
                     Thread.sleep(500);
                     currTime++;
                     System.out.println("----------------------------- currTime: " + currTime);
@@ -102,52 +105,89 @@ public class SRTFSchedular extends JFrame implements Runnable {
 
         while (exitedProcessCount < processCount) {
             try {
-                
-                System.out.println("waiting queue size " + waitingQueue.size());
-                if (!waitingQueue.isEmpty()) {
-                    // get the process with the shortest remaining time
-                    SRTFProcess shortestProcess = waitingQueue.peek();
-                    // print the remaining time of shortest process and running process
-                    System.out.println("shortest process remaining time " + shortestProcess.getRemainingTime());
-                    // print hte whole waiting queue for debug
-                    System.out.println("waiting queue");
-                    for (SRTFProcess p : waitingQueue) {
-                        System.out.println(p.getName() + " " + p.getEffectiveRemainingTime());
-                    }
-                    // check if the shortest process is shorter than the currently running process
-                    if (
-                            runningProcess == null ||
-                                    shortestProcess.getEffectiveRemainingTime() < runningProcess.getEffectiveRemainingTime()
-                    ) {
-                        // if the shortest process is shorter than the currently running process
-                        // then interrupt the current process and execute the shortest process
-                        System.out.println("shortest process is " + shortestProcess.getName() + " with remaining time " + shortestProcess.getRemainingTime());
-                        waitingQueue.remove(shortestProcess);
-                        if (runningProcess != null) {
-                            highlightProcessRow(runningProcess.getNumber(), Color.GRAY);
-                            runningProcess.running = false;
-                            // add the running process to the waiting queue
-                            SRTFProcess currentRunningProcess = runningProcess;
-                            currentRunningProcess.setRemainingTime(currentRunningProcess.getRemainingTime() - 1);
-                            waitingQueue.add(currentRunningProcess);
-                            new Thread(()->{currentRunningProcess.startwaiting();}).start();
-                            
-                            
-  
-                        }
-                            
-                          runningProcess = shortestProcess;
-                          highlightProcessRow(runningProcess.getNumber(), Color.GRAY);
-                        
-                        
-                        
-                        System.out.println("switching....context");
-                        Thread.sleep(1000L);
-                        System.out.println("finished....switching....context");
-                        runningProcess.execute();
 
+                System.out.println("waiting queue size " + waitingQueue.size());
+                if(!swiching){
+                    if (!waitingQueue.isEmpty()) {
+                        if (runningProcess == null || runningProcess.getRemainingTime() == 0){
+                            System.out.println("runningProcess == null || runningProcess.getRemainingTime() == 0");
+
+                            while (runningProcess != null);
+
+                            runningProcess = waitingQueue.poll();
+
+                            swiching = true;
+                            new Thread(()->{
+                                System.out.println("switching....context");
+                                highlightProcessRow(runningProcess.getNumber(), Color.GRAY);
+                                System.out.println("finished....switching....context");
+                                try {
+                                    Thread.sleep(800L);
+                                } catch (InterruptedException e) {
+                                    throw new RuntimeException(e);
+                                }
+
+                                new Thread(()->{
+                                    runningProcess.execute();
+                                }).start();
+
+                                swiching = false;
+                            }).start();
+
+                        }
+                        else{
+                            // get the process with the shortest remaining time
+                            SRTFProcess shortestProcess = waitingQueue.peek();
+                            // print the remaining time of shortest process and running process
+                            System.out.println("shortest process remaining time " + shortestProcess.getRemainingTime());
+                            // print hte whole waiting queue for debug
+//                            System.out.println("waiting queue");
+//                            for (SRTFProcess p : waitingQueue) {
+//                                System.out.println(p.getName() + " " + p.getEffectiveRemainingTime());
+//                            }
+                            // check if the shortest process is shorter than the currently running process
+                            if (shortestProcess.getEffectiveRemainingTime() < runningProcess.getEffectiveRemainingTime()) {
+                                System.out.println("shortestProcess.getEffectiveRemainingTime() < runningProcess.getEffectiveRemainingTime()");
+                                // if the shortest process is shorter than the currently running process
+                                // then interrupt the current process and execute the shortest process
+                                System.out.println("shortest process is " + shortestProcess.getName() + " with remaining time " + shortestProcess.getRemainingTime());
+                                runningProcess.running = false;
+                                highlightProcessRow(runningProcess.getNumber(), Color.GRAY);
+
+                                if (runningProcess.getRemainingTime() == 0){
+                                    runningProcess = waitingQueue.poll();
+                                }
+                                else {
+                                    runningProcess.setRemainingTime(runningProcess.getRemainingTime() - 1);
+                                    new Thread(runningProcess::startwaiting).start();
+                                    waitingQueue.add(runningProcess);
+                                    runningProcess = waitingQueue.poll();
+                                }
+                                // add the running process to the waiting queue
+//                            SRTFProcess currentRunningProcess = runningProcess;
+//                            currentRunningProcess.setRemainingTime(currentRunningProcess.getRemainingTime() - 1);
+                                swiching = true;
+                                new Thread(()->{
+                                    try {
+                                        Thread.sleep(800L);
+                                    } catch (InterruptedException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                    System.out.println("switching....context");
+                                highlightProcessRow(runningProcess.getNumber(), Color.GRAY);
+                                System.out.println("finished....switching....context");
+
+                                new Thread(()->{
+                                    runningProcess.execute();
+                                }).start();
+
+                                swiching = false;
+                                }).start();
+                            }
+                        }
                     }
                 }
+
             Thread.sleep(1000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
