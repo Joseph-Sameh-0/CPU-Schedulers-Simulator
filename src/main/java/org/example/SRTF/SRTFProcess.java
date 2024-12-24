@@ -22,7 +22,7 @@ public class SRTFProcess implements Comparable<SRTFProcess>, Runnable {
             String name,
             int burstTime,
             int arrivalTime,
-            SRTFScheduler schedular,
+            SRTFScheduler scheduler,
             Color color
     ) {
         this.number = number;
@@ -31,7 +31,7 @@ public class SRTFProcess implements Comparable<SRTFProcess>, Runnable {
         this.arrivalTime = arrivalTime;
         this.remainingTime = burstTime;
         this.effectiveRemainingTime = burstTime;
-        this.scheduler = schedular;
+        this.scheduler = scheduler;
         this.color = color;
     }
 
