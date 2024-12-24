@@ -153,16 +153,6 @@ public class SRTFProcess implements Comparable<SRTFProcess>, Runnable {
                 Thread.sleep(1000L);
                 waitingTime++;
                 effectiveRemainingTime = (int) Math.floor(this.getRemainingTime() - (this.getWaitingTime() / agingFactor));
-                System.out.println(
-                        "Process " +
-                                name +
-                                " waiting -> effectiveRemainingTime:" +
-                                effectiveRemainingTime +
-                                " remaining time"+
-                                remainingTime +
-                                " burstTime: " +
-                                burstTime
-                );
 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

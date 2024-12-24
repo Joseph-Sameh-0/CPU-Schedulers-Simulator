@@ -79,7 +79,6 @@ public class SRTFScheduler extends JFrame implements Runnable {
         // highlightProcessRow(runningProcess.getNumber(), Color.GRAY);
         runningProcess = null;
         exitedProcessCount++;
-        System.out.println("exited process count " + exitedProcessCount);
 
         
     }
@@ -110,7 +109,7 @@ public class SRTFScheduler extends JFrame implements Runnable {
                 if(!swiching){
                     if (!waitingQueue.isEmpty()) {
                         if (runningProcess == null || runningProcess.getRemainingTime() == 0){
-                            System.out.println("runningProcess == null || runningProcess.getRemainingTime() == 0");
+
 
                             while (runningProcess != null);
 
@@ -147,7 +146,6 @@ public class SRTFScheduler extends JFrame implements Runnable {
 //                            }
                             // check if the shortest process is shorter than the currently running process
                             if (shortestProcess.getEffectiveRemainingTime() < runningProcess.getEffectiveRemainingTime()) {
-                                System.out.println("shortestProcess.getEffectiveRemainingTime() < runningProcess.getEffectiveRemainingTime()");
                                 // if the shortest process is shorter than the currently running process
                                 // then interrupt the current process and execute the shortest process
                                 System.out.println("shortest process is " + shortestProcess.getName() + " with remaining time " + shortestProcess.getRemainingTime());
