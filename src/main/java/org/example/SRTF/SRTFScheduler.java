@@ -28,12 +28,12 @@ public class SRTFScheduler extends JFrame implements Runnable {
     private List<String> processNames = new ArrayList<>();
     private final Map<Integer, List<ColoredRectangle>> highlightedRows = new HashMap<>();
     private Boolean guiSetuped = false;
+    private boolean switching;
 
     // Priority queue based on the remaining time of the processes
     private PriorityQueue<SRTFProcess> waitingQueue = new PriorityQueue<>(
             (p1, p2) -> Integer.compare(p1.getRemainingTime(), p2.getRemainingTime())
     );
-    private boolean swiching;
 
 
     public SRTFScheduler(int processCount) {
@@ -60,9 +60,7 @@ public class SRTFScheduler extends JFrame implements Runnable {
             // System.out.println("No process is running");
 
             runningProcess = process;
-            new Thread(()->{
-                runningProcess.execute();
-            }).start();
+            new Thread(runningProcess::execute).start();
 
             return;
         }
@@ -80,7 +78,7 @@ public class SRTFScheduler extends JFrame implements Runnable {
         runningProcess = null;
         exitedProcessCount++;
 
-        
+
     }
 
     @Override
@@ -106,87 +104,45 @@ public class SRTFScheduler extends JFrame implements Runnable {
             try {
 
                 // System.out.println("waiting queue size " + waitingQueue.size());
-                if(!swiching){
-                    if (!waitingQueue.isEmpty()) {
-                        if (runningProcess == null || runningProcess.getRemainingTime() == 0){
+                if (!waitingQueue.isEmpty() && !switching) {
+                    if (runningProcess == null || runningProcess.getRemainingTime() == 0) {
 
 
-                            while (runningProcess != null);
+                        while (runningProcess != null) ;
 
-                            runningProcess = waitingQueue.poll();
+                        runningProcess = waitingQueue.poll();
 
-                            swiching = true;
-                            new Thread(()->{
-                                System.out.println("switching....context");
-                                highlightProcessRow(runningProcess.getNumber(), Color.GRAY);
-                                System.out.println("finished....switching....context");
-                                try {
-                                    Thread.sleep(1000);
-                                } catch (InterruptedException e) {
-                                    throw new RuntimeException(e);
-                                }
+                        contextSwitch();
 
-                                new Thread(()->{
-                                    runningProcess.execute();
-                                }).start();
+                    } else {
+                        // get the process with the shortest remaining time
+                        SRTFProcess shortestProcess = waitingQueue.peek();
+                        // print the remaining time of shortest process and running process
+//                             System.out.println("shortest process remaining time " + shortestProcess.getRemainingTime());
 
-                                swiching = false;
-                            }).start();
+                        // check if the shortest process is shorter than the currently running process
+                        if (shortestProcess.getEffectiveRemainingTime() < runningProcess.getEffectiveRemainingTime()) {
+                            // if the shortest process is shorter than the currently running process
+                            // then interrupt the current process and execute the shortest process
+                            System.out.println("shortest process is " + shortestProcess.getName() + " with remaining time " + shortestProcess.getRemainingTime());
+                            runningProcess.running = false;
+                            highlightProcessRow(runningProcess.getNumber(), Color.GRAY);
 
-                        }
-                        else{
-                            // get the process with the shortest remaining time
-                            SRTFProcess shortestProcess = waitingQueue.peek();
-                            // print the remaining time of shortest process and running process
-                            // System.out.println("shortest process remaining time " + shortestProcess.getRemainingTime());
-                            // print hte whole waiting queue for debug
-//                            System.out.println("waiting queue");
-//                            for (SRTFProcess p : waitingQueue) {
-//                                System.out.println(p.getName() + " " + p.getEffectiveRemainingTime());
-//                            }
-                            // check if the shortest process is shorter than the currently running process
-                            if (shortestProcess.getEffectiveRemainingTime() < runningProcess.getEffectiveRemainingTime()) {
-                                // if the shortest process is shorter than the currently running process
-                                // then interrupt the current process and execute the shortest process
-                                System.out.println("shortest process is " + shortestProcess.getName() + " with remaining time " + shortestProcess.getRemainingTime());
-                                runningProcess.running = false;
-                                highlightProcessRow(runningProcess.getNumber(), Color.GRAY);
-
-                                if (runningProcess.getRemainingTime() == 0){
-                                    runningProcess = waitingQueue.poll();
-                                }
-                                else {
-                                    runningProcess.setRemainingTime(runningProcess.getRemainingTime() - 1);
-                                    new Thread(runningProcess::startwaiting).start();
-                                    waitingQueue.add(runningProcess);
-                                    runningProcess = waitingQueue.poll();
-                                }
-                                // add the running process to the waiting queue
-//                            SRTFProcess currentRunningProcess = runningProcess;
-//                            currentRunningProcess.setRemainingTime(currentRunningProcess.getRemainingTime() - 1);
-                                swiching = true;
-                                new Thread(()->{
-                                    System.out.println("switching....context");
-                                highlightProcessRow(runningProcess.getNumber(), Color.GRAY);
-                                System.out.println("finished....switching....context");
-                                    try {
-                                        Thread.sleep(1000);
-                                    } catch (InterruptedException e) {
-                                        throw new RuntimeException(e);
-                                    }
-
-                                new Thread(()->{
-                                    runningProcess.execute();
-                                }).start();
-
-                                swiching = false;
-                                }).start();
+                            if (runningProcess.getRemainingTime() == 0) {
+                                runningProcess = waitingQueue.poll();
+                            } else {
+                                runningProcess.setRemainingTime(runningProcess.getRemainingTime() - 1);
+                                new Thread(runningProcess::startwaiting).start();
+                                waitingQueue.add(runningProcess);
+                                runningProcess = waitingQueue.poll();
                             }
+                            // add the running process to the waiting queue
+                            contextSwitch();
                         }
                     }
                 }
 
-            Thread.sleep(10);
+                Thread.sleep(10);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;
@@ -194,6 +150,24 @@ public class SRTFScheduler extends JFrame implements Runnable {
 
         }
 
+    }
+
+    private void contextSwitch() {
+        switching = true;
+        new Thread(() -> {
+            System.out.println("switching....context");
+            highlightProcessRow(runningProcess.getNumber(), Color.GRAY);
+            System.out.println("finished....switching....context");
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+            new Thread(runningProcess::execute).start();
+
+            switching = false;
+        }).start();
     }
 
 
@@ -361,6 +335,7 @@ public class SRTFScheduler extends JFrame implements Runnable {
 
     public void setupProcess(SRTFProcess process) {
         Graphics graphPanelGraphics = graphPanel.getGraphics();
+        if (graphPanelGraphics == null) return;
         int rowY = process.getNumber() * 40; // Offset by top row height
         graphPanelGraphics.setColor(Color.WHITE);
         graphPanelGraphics.drawString(process.getName(), 10, rowY + 15);
@@ -380,11 +355,11 @@ public class SRTFScheduler extends JFrame implements Runnable {
         tableModel.addColumn("Color");
 
         // Add the process information to the table model
-        tableModel.addRow(new Object[] {
+        tableModel.addRow(new Object[]{
                 process.getName(),
                 process.getArrivalTime(),
                 process.getBurstTime(),
-                "RGB: (" + process.getColor().getRed() + ", " + process.getColor().getGreen() + ", " + process.getColor().getBlue()+")"
+                "RGB: (" + process.getColor().getRed() + ", " + process.getColor().getGreen() + ", " + process.getColor().getBlue() + ")"
         });
 
         // Create a JTable component to display the table
