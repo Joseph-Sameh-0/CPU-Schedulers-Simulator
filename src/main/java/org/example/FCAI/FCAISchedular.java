@@ -79,7 +79,8 @@ public class FCAISchedular extends JFrame {
 
                             // Draw rectangles for this process
                             if (highlightedRows.containsKey(p.getNumber())) {
-                                for (ColoredRectangle rect : highlightedRows.get(p.getNumber())) {
+                                List<ColoredRectangle> rectList = new ArrayList<>(highlightedRows.get(p.getNumber()));
+                                for (ColoredRectangle rect : rectList) {
                                     g.setColor(rect.color);
                                     g.fillRect(rect.x, rect.y, rect.width, rect.height);
                                     g.setColor(Color.BLACK);
@@ -353,6 +354,7 @@ public class FCAISchedular extends JFrame {
                 int smallestFactor = waitingQueue.getSmallest().getFactor();
                 int currentFactor = runningProcess.getFactor();
                 if (runningProcess.isPreemptive() && smallestFactor <= currentFactor) {
+                    System.out.println("The current process factor is " + currentFactor + " the smallest factor is " + smallestFactor);
                     System.out.println(
                             "FCAI process " + runningProcess.getName() + " interrupted"
                     );
