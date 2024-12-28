@@ -75,6 +75,7 @@ public class SRTFScheduler extends JFrame implements Runnable {
         //   "SRTFScheduler finished the " + process.getName() + " process"
         // );
         // highlightProcessRow(runningProcess.getNumber(), Color.GRAY);
+        runningProcess.running = false;
         runningProcess = null;
         exitedProcessCount++;
 
