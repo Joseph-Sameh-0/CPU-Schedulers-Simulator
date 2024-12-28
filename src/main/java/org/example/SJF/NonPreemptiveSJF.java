@@ -166,7 +166,7 @@ public class NonPreemptiveSJF extends JFrame {
     setAlwaysOnTop(true); // Keep it on top during setup
     setVisible(true); // Make it visible
     toFront(); // Bring to the front
-    // setAlwaysOnTop(false); // Allow normal window behavior afterward
+    setAlwaysOnTop(false); // Allow normal window behavior afterward
 
     graphPanel =
       new JPanel() {

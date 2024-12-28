@@ -11,6 +11,8 @@ import java.util.Map;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
 
 import org.example.ColoredRectangle;
 
@@ -41,7 +43,7 @@ public class FCAISchedular extends JFrame {
         //setup the GUI
         //set the processes information in the GUI
         setTitle("CPU Scheduling Graph");
-        setSize(800, 600);
+        setSize(1200, 600);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
@@ -52,7 +54,7 @@ public class FCAISchedular extends JFrame {
         setAlwaysOnTop(true); // Keep it on top during setup
         setVisible(true); // Make it visible
         toFront(); // Bring to the front
-        // setAlwaysOnTop(false); // Allow normal window behavior afterward
+        setAlwaysOnTop(false); // Allow normal window behavior afterward
 
         graphPanel =
                 new JPanel() {
@@ -140,10 +142,56 @@ public class FCAISchedular extends JFrame {
         add(combinedPanel, BorderLayout.CENTER);
 
         // Initialize and configure the info panel
-        infoPanel = new JPanel();
+        infoPanel = new JPanel() {
+            {
+                // Set layout and appearance
+                setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+                setBackground(Color.DARK_GRAY);
+                setPreferredSize(new Dimension(200, getHeight()));
+                setBorder(new EmptyBorder(10, 10, 10, 10));
+
+                // Create a table model
+                DefaultTableModel tableModel = new DefaultTableModel();
+                tableModel.addColumn("Process Name");
+                tableModel.addColumn("Arrival Time");
+                tableModel.addColumn("Burst Time");
+                tableModel.addColumn("Color");
+
+                for (FCAIProcess process : processes) {
+                    tableModel.addRow(new Object[]{
+                            process.getName(),
+                            process.getArrivalTime(),
+                            process.getBurstTime(),
+                            "RGB: (" + process.getColor().getRed() + ", " + process.getColor().getGreen() + ", " + process.getColor().getBlue() + ")"
+                    });
+                }
+
+                // Create a JTable component
+                JTable processTable = new JTable(tableModel);
+
+                // Set the background color of the table's rows
+                processTable.setBackground(Color.LIGHT_GRAY);
+
+                // Set the background color of the table's columns
+                processTable.getTableHeader().setBackground(Color.DARK_GRAY);
+                processTable.getTableHeader().setForeground(Color.WHITE);
+
+                // Center text in cells
+                DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+                centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+                for (int i = 0; i < processTable.getColumnCount(); i++) {
+                    processTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+                }
+
+                // Add the table to this panel
+                add(new JScrollPane(processTable));
+                processTable.getParent().setBackground(Color.DARK_GRAY);
+            }
+        };
+
         infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
         infoPanel.setBackground(Color.DARK_GRAY);
-        infoPanel.setPreferredSize(new Dimension(200, getHeight()));
+        infoPanel.setPreferredSize(new Dimension(500, getHeight()));
         infoPanel.setBorder(new LineBorder(Color.LIGHT_GRAY, 2));
         infoPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
         add(infoPanel, BorderLayout.EAST);
@@ -156,19 +204,19 @@ public class FCAISchedular extends JFrame {
         statsPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
         add(statsPanel, BorderLayout.SOUTH);
 
-        // Method to setup the info panel
-        JLabel title = new JLabel("Processes Information");
-        title.setForeground(Color.RED);
-        infoPanel.add(title);
-
-        // Add each process's information
-        for (FCAIProcess p : processes) {
-            JLabel processInfo = new JLabel(
-                    "Process: " + p.getName() + ", Color: " + p.getColor()
-            );
-            processInfo.setForeground(Color.WHITE);
-            infoPanel.add(processInfo);
-        }
+//        // Method to setup the info panel
+//        JLabel title = new JLabel("Processes Information");
+//        title.setForeground(Color.RED);
+//        infoPanel.add(title);
+//
+//        // Add each process's information
+//        for (FCAIProcess p : processes) {
+//            JLabel processInfo = new JLabel(
+//                    "Process: " + p.getName() + ", Color: " + p.getColor()
+//            );
+//            processInfo.setForeground(Color.WHITE);
+//            infoPanel.add(processInfo);
+//        }
 
         JLabel statsTitle = new JLabel("Statistics");
         statsTitle.setForeground(Color.RED);
