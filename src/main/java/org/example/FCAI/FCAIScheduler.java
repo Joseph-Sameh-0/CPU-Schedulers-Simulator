@@ -16,7 +16,7 @@ import javax.swing.table.DefaultTableModel;
 
 import org.example.ColoredRectangle;
 
-public class FCAISchedular extends JFrame {
+public class FCAIScheduler extends JFrame {
 
     FCAICalc calc;
     FCAIProcess runningProcess;
@@ -24,18 +24,16 @@ public class FCAISchedular extends JFrame {
     protected List<FCAIProcess> processes;
     private int finishedProcesses;
     private JPanel graphPanel;
-    private JPanel infoPanel;
-    private JPanel statsPanel;
     private final long unitOfTime;
     private int currTime;
     private final Map<Integer, List<ColoredRectangle>> highlightedRows = new HashMap<>();
 
-    public FCAISchedular(long unitOfTime) {
+    public FCAIScheduler(long unitOfTime) {
         this.waitingQueue = new CustomQueue<>();
         this.unitOfTime = unitOfTime;
     }
 
-    public FCAISchedular() {
+    public FCAIScheduler() {
         this(1000);
     }
 
@@ -142,7 +140,13 @@ public class FCAISchedular extends JFrame {
         add(combinedPanel, BorderLayout.CENTER);
 
         // Initialize and configure the info panel
-        infoPanel = new JPanel() {
+        // Create a table model
+        // Create a JTable component
+        // Set the background color of the table's rows
+        // Set the background color of the table's columns
+        // Center text in cells
+        // Add the table to this panel
+        JPanel infoPanel = new JPanel() {
             {
                 setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
                 setBackground(Color.DARK_GRAY);
@@ -193,7 +197,7 @@ public class FCAISchedular extends JFrame {
         add(infoPanel, BorderLayout.EAST);
 
         // Initialize and configure the stats panel
-        statsPanel = new JPanel();
+        JPanel statsPanel = new JPanel();
         statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.Y_AXIS));
         statsPanel.setBackground(Color.DARK_GRAY);
         statsPanel.setBorder(new LineBorder(Color.LIGHT_GRAY, 2));
@@ -233,7 +237,7 @@ public class FCAISchedular extends JFrame {
         setVisible(true);
     }
 
-    public synchronized void highlightProcessRow(int processNumber, Color color) {
+    public void highlightProcessRow(int processNumber, Color color) {
         final int squareWidth = 50;
         final int squareHeight = 20;
         final int y = processNumber * 40; // Calculate the y-coordinate for the row
@@ -252,8 +256,8 @@ public class FCAISchedular extends JFrame {
         graphPanel.repaint(); // Trigger repaint to redraw all rectangles
     }
 
-    public synchronized void deHighlightProcessRow(int processNumber) {
-        highlightedRows.get(processNumber).remove(highlightedRows.get(processNumber).size() - 1);
+    public void deHighlightProcessRow(int processNumber) {
+        highlightedRows.get(processNumber).removeLast();
     }
 
 

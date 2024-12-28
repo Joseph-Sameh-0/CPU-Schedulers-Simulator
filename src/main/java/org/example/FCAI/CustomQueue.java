@@ -20,7 +20,7 @@ class CustomQueue<T extends Comparable<T>> {
     // Get the "first in" element
     public T getFirstIn() {
         synchronized (list) {
-            return list.isEmpty() ? null : list.get(0);
+            return list.isEmpty() ? null : list.getFirst();
         }
     }
 
@@ -30,7 +30,7 @@ class CustomQueue<T extends Comparable<T>> {
             if (list.isEmpty()) {
                 return null;
             }
-            T smallest = list.get(0);
+            T smallest = list.getFirst();
             for (T element : list) {
                 if (element.compareTo(smallest) < 0) {
                     smallest = element;
@@ -43,7 +43,7 @@ class CustomQueue<T extends Comparable<T>> {
     // Remove the "first in" element
     public T removeFirstIn() {
         synchronized (list) {
-            return list.isEmpty() ? null : list.remove(0);
+            return list.isEmpty() ? null : list.removeFirst();
         }
     }
 

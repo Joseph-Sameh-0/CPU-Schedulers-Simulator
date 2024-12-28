@@ -1,8 +1,13 @@
 package org.example.FCAI;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.awt.Color;
 
-class FCAIProcess implements Comparable<FCAIProcess>, Runnable {
+@Getter
+@Setter
+public class FCAIProcess implements Comparable<FCAIProcess>, Runnable {
 
     private final int number;
     private final String name;
@@ -10,16 +15,12 @@ class FCAIProcess implements Comparable<FCAIProcess>, Runnable {
     private final int arrivalTime;
     private final int priority;
     private int quantum;
-    private final FCAISchedular scheduler;
+    private final FCAIScheduler scheduler;
     private Boolean running = false;
     private int remainingQuantum;
     private FCAICalc calc;
     private final Color color;
     private final long unitOfTime;
-
-    public Color getColor() {
-        return color;
-    }
 
     private static enum Status {
         NotArrived,
@@ -37,7 +38,7 @@ class FCAIProcess implements Comparable<FCAIProcess>, Runnable {
             int quantum,
             Color color,
             long unitOfTime,
-            FCAISchedular schedular
+            FCAIScheduler schedular
     ) {
         this.number = number;
         this.name = name;
@@ -48,42 +49,6 @@ class FCAIProcess implements Comparable<FCAIProcess>, Runnable {
         this.color = color;
         this.unitOfTime = unitOfTime;
         this.scheduler = schedular;
-    }
-
-    public int getNumber() {
-        return number;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public int getBurstTime() {
-        return burstTime;
-    }
-
-    public int getArrivalTime() {
-        return arrivalTime;
-    }
-
-    public int getPriority() {
-        return priority;
-    }
-
-    public int getQuantum() {
-        return quantum;
-    }
-
-    public void setQuantum(int quantum) {
-        this.quantum = quantum;
-    }
-
-    public int getRemainingQuantum() {
-        return remainingQuantum;
-    }
-
-    public void setCalc(FCAICalc calc) {
-        this.calc = calc;
     }
 
     public int getFactor() {
@@ -210,12 +175,9 @@ class FCAIProcess implements Comparable<FCAIProcess>, Runnable {
     public Boolean isPreemptive() {
         double preemptiveFactor = (quantum - remainingQuantum) / (double) quantum;
         // System.out.println("preemptiveFactor = " + preemptiveFactor);
-        if (preemptiveFactor >= 0.4) {
-            // System.out.println(p.getName() + " is Preemptive");
-            return true;
-        }
+        // System.out.println(p.getName() + " is Preemptive");
+        return preemptiveFactor >= 0.4;
         // System.out.println(p.getName() + " is not Preemptive");
-        return false;
     }
 
     @Override

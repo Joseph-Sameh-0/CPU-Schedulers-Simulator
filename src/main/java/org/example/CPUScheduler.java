@@ -35,10 +35,10 @@ public class CPUScheduler {
           SRTFSimulator.main();
           break;
         case 4:
-          final FCAISchedular fCAISchedular;
-          fCAISchedular = new FCAISchedular(500); // create a new FCAI scheduler
-          fCAISchedular.setProcesses("src/test_cases/AG.txt");
-          fCAISchedular.main();
+          final FCAIScheduler fCAIScheduler;
+          fCAIScheduler = new FCAIScheduler(500); // create a new FCAI scheduler
+          fCAIScheduler.setProcesses("src/test_cases/AG.txt");
+          fCAIScheduler.main();
           break;
         case 5:
           exit = true;
