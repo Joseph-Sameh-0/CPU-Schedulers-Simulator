@@ -144,11 +144,12 @@ public class FCAISchedular extends JFrame {
         // Initialize and configure the info panel
         infoPanel = new JPanel() {
             {
-                // Set layout and appearance
                 setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
                 setBackground(Color.DARK_GRAY);
-                setPreferredSize(new Dimension(200, getHeight()));
+                setPreferredSize(new Dimension(500, getHeight()));
+                setBorder(new LineBorder(Color.LIGHT_GRAY, 2));
                 setBorder(new EmptyBorder(10, 10, 10, 10));
+
 
                 // Create a table model
                 DefaultTableModel tableModel = new DefaultTableModel();
@@ -189,11 +190,6 @@ public class FCAISchedular extends JFrame {
             }
         };
 
-        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
-        infoPanel.setBackground(Color.DARK_GRAY);
-        infoPanel.setPreferredSize(new Dimension(500, getHeight()));
-        infoPanel.setBorder(new LineBorder(Color.LIGHT_GRAY, 2));
-        infoPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
         add(infoPanel, BorderLayout.EAST);
 
         // Initialize and configure the stats panel

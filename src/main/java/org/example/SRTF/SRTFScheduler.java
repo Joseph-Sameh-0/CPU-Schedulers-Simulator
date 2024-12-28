@@ -198,7 +198,7 @@ public class SRTFScheduler extends JFrame implements Runnable {
         //set up the GUI
         //set the processes information in the GUI
         setTitle("CPU Scheduling Graph");
-        setSize(1100, 600);
+        setSize(1200, 600);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
@@ -209,7 +209,7 @@ public class SRTFScheduler extends JFrame implements Runnable {
         setAlwaysOnTop(true); // Keep it on top during setup
         setVisible(true); // Make it visible
         toFront(); // Bring to the front
-        // setAlwaysOnTop(false); // Allow normal window behavior afterward
+        setAlwaysOnTop(false); // Allow normal window behavior afterward
 
         graphPanel =
                 new JPanel() {
